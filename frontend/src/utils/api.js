@@ -1,8 +1,10 @@
 import axios from "axios";
 
 export const API = axios.create({
-  baseURL: "http://localhost:5000/api", // FIXED
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true, 
 });
+
 
 // Attach token automatically
 API.interceptors.request.use((config) => {
