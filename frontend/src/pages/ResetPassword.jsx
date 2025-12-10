@@ -1,38 +1,58 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { API } from "../utils/api";
 
 export default function ResetPassword() {
   const { token } = useParams();
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+    setError("");
 
     try {
       const res = await API.post(`/auth/reset-password/${token}`, {
         password,
       });
-
-      setMessage(res.data.message);
+      setMessage(res.data.message || "Password reset successful");
     } catch (err) {
-      setMessage(err.response.data.message);
+      setError(err.response?.data?.message || "Invalid or expired link");
     }
   };
 
   return (
-    <div>
-      <h2>Reset Your Password</h2>
-      <form onSubmit={handleSubmit}>
-        <input 
-          type="password"
-          placeholder="New Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Reset Password</button>
-      </form>
-      <p>{message}</p>
+    <div className="auth-page">
+      <div className="auth-card">
+        <h2>Set a new password</h2>
+
+        {message && (
+          <div className="auth-success">
+            {message} <br />
+            <Link to="/login">Go to login</Link>
+          </div>
+        )}
+        {error && <div className="auth-error">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="field">
+            <label>New password</label>
+            <input
+              type="password"
+              value={password}
+              placeholder="New password"
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <button className="btn btn-primary full-width" type="submit">
+            Reset password
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

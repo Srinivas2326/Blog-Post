@@ -1,0 +1,90 @@
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+}
+
+/* Navbar */
+
+.navbar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.6rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  backdrop-filter: blur(14px);
+  background: radial-gradient(circle at top left, #020617dd, #020617d0);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.nav-logo {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: white;
+  text-decoration: none;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.nav-link {
+  color: var(--text-soft);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.nav-link:hover {
+  color: var(--accent);
+}
+
+.nav-user {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+/* Page layout */
+
+.page-container {
+  max-width: 960px;
+  margin: 1.8rem auto;
+  padding: 0 1rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+/* Posts */
+
+.post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.post-item {
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.post-item h4 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1rem;
+}

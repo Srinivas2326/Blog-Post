@@ -1,6 +1,6 @@
 const Post = require("../models/Post");
 
-// CREATE POST (author only)
+// CREATE POST
 exports.createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -8,63 +8,96 @@ exports.createPost = async (req, res) => {
     const post = await Post.create({
       title,
       content,
-      author: req.user._id
+      author: req.user._id,
+      isPublished: true,
     });
 
     res.status(201).json({
       message: "Post created successfully",
-      post
+      post,
     });
-
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// GET ALL POSTS (public)
+// GET ALL POSTS (Public)
 exports.getAllPosts = async (req, res) => {
-  const posts = await Post.find().populate("author", "name email role");
-  res.json(posts);
+  try {
+    const posts = await Post.find()
+      .populate("author", "_id name email role");   // ✅ FIX ADDED
+
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: "Could not fetch posts" });
+  }
 };
 
-// GET SINGLE POST (public)
+// GET SINGLE POST
 exports.getPostById = async (req, res) => {
-  const post = await Post.findById(req.params.id).populate("author", "name email role");
-  res.json(post);
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate("author", "_id name email role");  // ✅ Populate here also
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.json(post);
+  } catch (error) {
+    res.status(404).json({ message: "Post not found" });
+  }
 };
 
-// UPDATE POST (only author of that post)
+// UPDATE POST
 exports.updatePost = async (req, res) => {
-  const post = await Post.findById(req.params.id);
+  try {
+    const post = await Post.findById(req.params.id);
 
-  if (!post) return res.status(404).json({ message: "Post not found" });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
 
-  if (post.author.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ message: "You can edit only your own posts" });
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You can edit only your posts" });
+    }
+
+    post.title = req.body.title || post.title;
+    post.content = req.body.content || post.content;
+
+    const updated = await post.save();
+
+    res.json({
+      message: "Post updated successfully",
+      updated,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
-
-  post.title = req.body.title || post.title;
-  post.content = req.body.content || post.content;
-
-  const updated = await post.save();
-
-  res.json({
-    message: "Post updated",
-    updated
-  });
 };
 
-// DELETE POST (author or admin)
+// DELETE POST
 exports.deletePost = async (req, res) => {
-  const post = await Post.findById(req.params.id);
+  try {
+    const post = await Post.findById(req.params.id);
 
-  if (!post) return res.status(404).json({ message: "Post not found" });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
 
-  if (post.author.toString() !== req.user._id.toString() && req.user.role !== "admin") {
-    return res.status(403).json({ message: "You cannot delete this post" });
+    if (
+      post.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You are not allowed to delete this post" });
+    }
+
+    await post.deleteOne();
+
+    res.json({ message: "Post deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
-
-  await post.deleteOne();
-
-  res.json({ message: "Post deleted" });
 };

@@ -1,12 +1,13 @@
 const express = require("express");
 const protect = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
+
 const {
   createPost,
   getAllPosts,
   getPostById,
   updatePost,
-  deletePost
+  deletePost,
 } = require("../controllers/postController");
 
 const router = express.Router();
@@ -15,11 +16,13 @@ const router = express.Router();
 router.get("/", getAllPosts);
 router.get("/:id", getPostById);
 
-// AUTHOR ROUTES
+// AUTHOR OR ADMIN CAN CREATE
 router.post("/", protect, authorizeRoles("author", "admin"), createPost);
+
+// AUTHOR OR ADMIN CAN UPDATE
 router.put("/:id", protect, authorizeRoles("author", "admin"), updatePost);
 
-// DELETE: only author of the post or admin
+// AUTHOR OR ADMIN CAN DELETE
 router.delete("/:id", protect, authorizeRoles("author", "admin"), deletePost);
 
 module.exports = router;
