@@ -7,22 +7,22 @@ const {
   getAllPosts,
   getPostById,
   updatePost,
-  deletePost,
+  deletePost
 } = require("../controllers/postController");
 
 const router = express.Router();
 
-// PUBLIC ROUTES
+// Public Routes
 router.get("/", getAllPosts);
 router.get("/:id", getPostById);
 
-// AUTHOR OR ADMIN CAN CREATE
+// Create Post (Must be author or admin)
 router.post("/", protect, authorizeRoles("author", "admin"), createPost);
 
-// AUTHOR OR ADMIN CAN UPDATE
-router.put("/:id", protect, authorizeRoles("author", "admin"), updatePost);
+// Update (Author only)
+router.put("/:id", protect, updatePost);
 
-// AUTHOR OR ADMIN CAN DELETE
-router.delete("/:id", protect, authorizeRoles("author", "admin"), deletePost);
+// Delete (Author or Admin)
+router.delete("/:id", protect, deletePost);
 
 module.exports = router;

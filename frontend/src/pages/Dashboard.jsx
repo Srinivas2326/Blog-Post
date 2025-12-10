@@ -9,36 +9,46 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !user) return;
 
     const fetchPosts = async () => {
       try {
         const res = await API.get("/posts", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` }
         });
 
-        console.log("Fetched posts:", res.data);
+        console.log("All posts from backend:", res.data);
+        console.log("Logged user:", user);
+
+        // The backend returns populated author object:
+        // { author: {_id, name, email} }
+        const filtered = res.data.filter(
+          (post) => post?.author?._id === user?._id
+        );
+
+        console.log("User posts:", filtered);
+
         setPosts(res.data);
 
-      } catch (err) {
-        console.error("Error fetching posts", err);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
       }
     };
-
+    
     fetchPosts();
-  }, [token]);
+  }, [token, user]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    if (!window.confirm("Are you sure?")) return;
 
     try {
       await API.delete(`/posts/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       setPosts((prev) => prev.filter((p) => p._id !== id));
-    } catch (err) {
-      console.error("Error deleting post", err);
+    } catch (error) {
+      console.error("Delete error:", error);
       alert("You cannot delete this post");
     }
   };
@@ -69,16 +79,6 @@ export default function Dashboard() {
                 <p>{post.content?.slice(0, 120)}...</p>
 
                 <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
-                  
-                  
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => navigate(`/post/${post._id}`)}
-                  >
-                    Read More
-                  </button>
-
-                  {/* EDIT BUTTON */}
                   <button
                     className="btn btn-outline"
                     onClick={() => navigate(`/edit-post/${post._id}`)}
@@ -86,14 +86,12 @@ export default function Dashboard() {
                     Edit
                   </button>
 
-                  {/* DELETE BUTTON */}
                   <button
                     className="btn btn-danger"
                     onClick={() => handleDelete(post._id)}
                   >
                     Delete
                   </button>
-
                 </div>
               </li>
             ))}
