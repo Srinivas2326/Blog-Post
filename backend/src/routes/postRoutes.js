@@ -7,22 +7,28 @@ const {
   getAllPosts,
   getPostById,
   updatePost,
-  deletePost
+  deletePost,
 } = require("../controllers/postController");
 
 const router = express.Router();
 
-// Public Routes
+  //  PUBLIC ROUTES
+
+// Get all posts (public)
 router.get("/", getAllPosts);
+
+// Get single post + increment view count
 router.get("/:id", getPostById);
 
-// Create Post (Must be author or admin)
+  //  PROTECTED ROUTES
+
+// Create Post (Only author/admin can create)
 router.post("/", protect, authorizeRoles("author", "admin"), createPost);
 
-// Update (Author only)
+// Update Post (Only author of that post can update)
 router.put("/:id", protect, updatePost);
 
-// Delete (Author or Admin)
+// Delete Post (Author or Admin can delete)
 router.delete("/:id", protect, deletePost);
 
 module.exports = router;

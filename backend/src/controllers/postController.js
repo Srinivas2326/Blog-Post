@@ -1,6 +1,8 @@
 const Post = require("../models/Post");
 
-// CREATE POST
+/* -----------------------------------------------------
+   CREATE POST  (Author / Admin)
+----------------------------------------------------- */
 exports.createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -10,6 +12,7 @@ exports.createPost = async (req, res) => {
       content,
       author: req.user._id,
       isPublished: true,
+      viewCount: 0, // ensure field exists
     });
 
     res.status(201).json({
@@ -21,11 +24,15 @@ exports.createPost = async (req, res) => {
   }
 };
 
-// GET ALL POSTS (Public)
+
+/* -----------------------------------------------------
+   GET ALL POSTS (Public)
+----------------------------------------------------- */
 exports.getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate("author", "_id name email role");   // ✅ FIX ADDED
+      .sort({ createdAt: -1 })
+      .populate("author", "_id name email role");
 
     res.json(posts);
   } catch (error) {
@@ -33,11 +40,19 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
-// GET SINGLE POST
+
+/* -----------------------------------------------------
+   GET SINGLE POST + INCREMENT VIEW COUNT
+----------------------------------------------------- */
 exports.getPostById = async (req, res) => {
   try {
+    // Increment view count safely
+    await Post.findByIdAndUpdate(req.params.id, {
+      $inc: { viewCount: 1 },
+    });
+
     const post = await Post.findById(req.params.id)
-      .populate("author", "_id name email role");  // ✅ Populate here also
+      .populate("author", "_id name email role");
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -45,11 +60,15 @@ exports.getPostById = async (req, res) => {
 
     res.json(post);
   } catch (error) {
-    res.status(404).json({ message: "Post not found" });
+    console.error("Error fetching post:", error);
+    res.status(500).json({ message: "Error fetching post" });
   }
 };
 
-// UPDATE POST
+
+/* -----------------------------------------------------
+   UPDATE POST (Author Only)
+----------------------------------------------------- */
 exports.updatePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -76,7 +95,10 @@ exports.updatePost = async (req, res) => {
   }
 };
 
-// DELETE POST
+
+/* -----------------------------------------------------
+   DELETE POST (Author or Admin)
+----------------------------------------------------- */
 exports.deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -85,6 +107,7 @@ exports.deletePost = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
+    // Only Author OR Admin can delete
     if (
       post.author.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"

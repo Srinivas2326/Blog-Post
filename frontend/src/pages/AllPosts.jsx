@@ -36,6 +36,7 @@ export default function AllPosts() {
                   By {post.author?.name} •{" "}
                   {new Date(post.createdAt).toLocaleDateString()}
                 </p>
+                <p className="muted">Views: {post.viewCount}</p>
 
                 <p style={{ marginTop: "10px" }}>
                   {post.content?.slice(0, 200)}...

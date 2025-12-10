@@ -18,7 +18,12 @@ const postSchema = new mongoose.Schema(
     isPublished: {
       type: Boolean,
       default: true
+    },
+    viewCount: {
+      type: Number,
+      default: 0
     }
+
   },
   { timestamps: true }
 );
