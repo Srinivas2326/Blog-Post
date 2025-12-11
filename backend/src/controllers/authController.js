@@ -59,7 +59,7 @@ exports.loginUser = async (req, res) => {
       message: "Login successful",
       accessToken,
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
         role: user.role,
         email: user.email,

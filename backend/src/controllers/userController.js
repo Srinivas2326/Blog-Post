@@ -32,19 +32,31 @@ exports.updateMyProfile = async (req, res) => {
     const userId = req.user.id;
     const { name, email } = req.body;
 
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and email required" });
+    }
+
     const user = await User.findById(userId);
     if (!user)
       return res.status(404).json({ message: "User not found" });
 
-    user.name = name || user.name;
-    user.email = email || user.email;
+    user.name = name;
+    user.email = email;
 
     await user.save();
 
-    res.json({ message: "Profile updated", user });
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -58,21 +70,23 @@ exports.changePassword = async (req, res) => {
     const userId = req.user.id;
     const { currentPassword, newPassword } = req.body;
 
-    if (!currentPassword || !newPassword)
+    if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: "All fields are required" });
+    }
 
     const user = await User.findById(userId);
     if (!user)
       return res.status(404).json({ message: "User not found" });
 
-    // Check current password
+    // Compare current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Current password is incorrect" });
 
-    // Save new hashed password
-    user.password = await bcrypt.hash(newPassword, 10);
-    await user.save();
+    // Assign new password (pre-save hook will hash it)
+    user.password = newPassword;
+
+    await user.save(); // triggers schema.pre("save") → hashes password
 
     res.json({ message: "Password changed successfully" });
 
@@ -119,9 +133,13 @@ exports.updateUser = async (req, res) => {
     user.name = name || user.name;
     user.email = email || user.email;
     user.role = role || user.role;
-    user.isActive = isActive ?? user.isActive;
+
+    if (typeof isActive === "boolean") {
+      user.isActive = isActive;
+    }
 
     await user.save();
+
     res.json({ message: "User updated", user });
 
   } catch (err) {
