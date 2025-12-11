@@ -4,6 +4,7 @@ import { API } from "../utils/api";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  // Load user from storage
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem("blog_user");
     return stored ? JSON.parse(stored) : null;
@@ -23,7 +24,7 @@ export const AuthProvider = ({ children }) => {
 
       const { accessToken, user } = res.data;
 
-      // Normalize ID (_id always exists)
+      // Normalize user ID to always have _id
       const fixedUser = {
         ...user,
         _id: user._id || user.id,
@@ -36,17 +37,16 @@ export const AuthProvider = ({ children }) => {
       // Save to localStorage
       localStorage.setItem("blog_user", JSON.stringify(fixedUser));
       localStorage.setItem("blog_token", accessToken);
+      localStorage.setItem("blog_userId", fixedUser._id); // Store ID for profile checks
 
       return { success: true };
 
     } catch (err) {
       console.error(err);
-
       return {
         success: false,
         message: err.response?.data?.message || "Login failed",
       };
-
     } finally {
       setLoading(false);
     }
@@ -74,18 +74,17 @@ export const AuthProvider = ({ children }) => {
 
         localStorage.setItem("blog_user", JSON.stringify(fixedUser));
         localStorage.setItem("blog_token", accessToken);
+        localStorage.setItem("blog_userId", fixedUser._id);
       }
 
       return { success: true };
 
     } catch (err) {
       console.error(err);
-
       return {
         success: false,
         message: err.response?.data?.message || "Registration failed",
       };
-
     } finally {
       setLoading(false);
     }
@@ -100,6 +99,7 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.removeItem("blog_user");
     localStorage.removeItem("blog_token");
+    localStorage.removeItem("blog_userId"); // Important
   };
 
   const value = {

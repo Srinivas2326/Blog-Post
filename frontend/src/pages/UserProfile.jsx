@@ -7,7 +7,6 @@ export default function UserProfile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✔ Correct key
   const loggedInUserId = localStorage.getItem("blog_userId");
 
   useEffect(() => {
