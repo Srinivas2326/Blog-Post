@@ -14,6 +14,8 @@ import EditPost from "./pages/EditPost";
 import AllPosts from "./pages/AllPosts";
 import PostDetails from "./pages/PostDetails";
 import UserProfile from "./pages/UserProfile";
+import EditProfile from "./pages/EditProfile";
+import ChangePassword from "./pages/ChangePassword";
 
 import NotFound from "./pages/NotFound";
 
@@ -24,6 +26,7 @@ export default function App() {
 
       <main className="main-content">
         <Routes>
+
           {/* Public Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
@@ -41,8 +44,12 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/edit-post/:id" element={<EditPost />} />
+
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/change-password" element={<ChangePassword />} />
           </Route>
 
+          {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

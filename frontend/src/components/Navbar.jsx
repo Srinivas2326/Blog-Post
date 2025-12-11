@@ -27,8 +27,8 @@ export default function Navbar() {
               All Posts
             </Link>
 
-            {/* IMPORTANT FIX: user.id instead of user._id */}
-            <Link to={`/user/${user?.id}`} className="nav-link">
+            {/* ALWAYS use normalized user._id */}
+            <Link to={`/user/${user?._id}`} className="nav-link">
               Profile
             </Link>
 
@@ -42,17 +42,11 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link to="/all-posts" className="nav-link">
-              All Posts
-            </Link>
+            <Link to="/all-posts" className="nav-link">All Posts</Link>
 
-            <Link to="/login" className="nav-link">
-              Login
-            </Link>
+            <Link to="/login" className="nav-link">Login</Link>
 
-            <Link to="/register" className="btn btn-primary">
-              Sign Up
-            </Link>
+            <Link to="/register" className="btn btn-primary">Sign Up</Link>
           </>
         )}
       </div>

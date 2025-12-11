@@ -1,17 +1,16 @@
 const User = require("../models/User");
 const Post = require("../models/Post");
+const bcrypt = require("bcryptjs");
 
-/* ---------------------------------------------------------
-   PUBLIC USER PROFILE  (Accessible by everyone)
+/* =====================================================
+   PUBLIC USER PROFILE  (Anyone can view)
    GET /users/profile/:id
---------------------------------------------------------- */
+====================================================== */
 exports.getUserPublicProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
-
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "User not found" });
-    }
 
     const posts = await Post.find({ author: req.params.id })
       .sort({ createdAt: -1 });
@@ -19,53 +18,103 @@ exports.getUserPublicProfile = async (req, res) => {
     res.json({ user, posts });
 
   } catch (err) {
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
+    res.status(500).json({ error: err.message });
   }
 };
 
-/* ---------------------------------------------------------
-   GET ALL USERS (Admin only)
---------------------------------------------------------- */
+
+/* =====================================================
+   UPDATE MY PROFILE  (Logged-in user)
+   PUT /users/me
+====================================================== */
+exports.updateMyProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, email } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    user.name = name || user.name;
+    user.email = email || user.email;
+
+    await user.save();
+
+    res.json({ message: "Profile updated", user });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+/* =====================================================
+   CHANGE PASSWORD  (Logged-in user)
+   PUT /users/change-password
+====================================================== */
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ message: "All fields are required" });
+
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    // Check current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Current password is incorrect" });
+
+    // Save new hashed password
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+/* =====================================================
+   ADMIN CONTROLLERS
+====================================================== */
+
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching users", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-/* ---------------------------------------------------------
-   GET SINGLE USER BY ID (Admin only)
---------------------------------------------------------- */
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
-
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "User not found" });
-    }
 
     res.json(user);
 
   } catch (err) {
-    res.status(500).json({ message: "Error fetching user", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-/* ---------------------------------------------------------
-   UPDATE USER INFO / ROLE (Admin only)
---------------------------------------------------------- */
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, role, isActive } = req.body;
-
     const user = await User.findById(req.params.id);
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
 
     user.name = name || user.name;
     user.email = email || user.email;
@@ -73,24 +122,20 @@ exports.updateUser = async (req, res) => {
     user.isActive = isActive ?? user.isActive;
 
     await user.save();
-
     res.json({ message: "User updated", user });
 
   } catch (err) {
-    res.status(500).json({ message: "Error updating user", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-/* ---------------------------------------------------------
-   UPDATE USER PERMISSIONS (Admin only)
---------------------------------------------------------- */
 exports.updatePermissions = async (req, res) => {
   try {
     const { permissions } = req.body;
-
     const user = await User.findById(req.params.id);
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
 
     user.permissions = permissions;
     await user.save();
@@ -98,24 +143,20 @@ exports.updatePermissions = async (req, res) => {
     res.json({ message: "Permissions updated", user });
 
   } catch (err) {
-    res.status(500).json({ message: "Error updating permissions", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-/* ---------------------------------------------------------
-   DELETE USER (Admin only)
---------------------------------------------------------- */
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
 
     await user.deleteOne();
-
     res.json({ message: "User deleted" });
 
   } catch (err) {
-    res.status(500).json({ message: "Error deleting user", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };

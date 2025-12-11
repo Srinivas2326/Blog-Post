@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { API } from "../utils/api";
 
 const AuthContext = createContext(null);
@@ -8,66 +8,96 @@ export const AuthProvider = ({ children }) => {
     const stored = localStorage.getItem("blog_user");
     return stored ? JSON.parse(stored) : null;
   });
+
   const [token, setToken] = useState(() => localStorage.getItem("blog_token"));
   const [loading, setLoading] = useState(false);
 
+  /* ---------------------------------------------------
+     LOGIN
+  --------------------------------------------------- */
   const login = async (email, password) => {
     setLoading(true);
+
     try {
       const res = await API.post("/auth/login", { email, password });
+
       const { accessToken, user } = res.data;
 
-      setUser(user);
+      // Normalize ID (_id always exists)
+      const fixedUser = {
+        ...user,
+        _id: user._id || user.id,
+      };
+
+      // Save state
+      setUser(fixedUser);
       setToken(accessToken);
 
-      localStorage.setItem("blog_user", JSON.stringify(user));
+      // Save to localStorage
+      localStorage.setItem("blog_user", JSON.stringify(fixedUser));
       localStorage.setItem("blog_token", accessToken);
 
       return { success: true };
+
     } catch (err) {
       console.error(err);
+
       return {
         success: false,
         message: err.response?.data?.message || "Login failed",
       };
+
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------------------------------------------------
+     REGISTER
+  --------------------------------------------------- */
   const register = async (name, email, password) => {
     setLoading(true);
-    try {
-      const res = await API.post("/auth/register", {
-        name,
-        email,
-        password,
-      });
 
-      // optional: auto-login after register
+    try {
+      const res = await API.post("/auth/register", { name, email, password });
+
       const { accessToken, user } = res.data;
+
       if (accessToken && user) {
-        setUser(user);
+        const fixedUser = {
+          ...user,
+          _id: user._id || user.id,
+        };
+
+        setUser(fixedUser);
         setToken(accessToken);
-        localStorage.setItem("blog_user", JSON.stringify(user));
+
+        localStorage.setItem("blog_user", JSON.stringify(fixedUser));
         localStorage.setItem("blog_token", accessToken);
       }
 
       return { success: true };
+
     } catch (err) {
       console.error(err);
+
       return {
         success: false,
         message: err.response?.data?.message || "Registration failed",
       };
+
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------------------------------------------------
+     LOGOUT
+  --------------------------------------------------- */
   const logout = () => {
     setUser(null);
     setToken(null);
+
     localStorage.removeItem("blog_user");
     localStorage.removeItem("blog_token");
   };
