@@ -7,7 +7,8 @@ export default function UserProfile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const loggedInUserId = localStorage.getItem("userId");
+  // ✔ Correct key
+  const loggedInUserId = localStorage.getItem("blog_userId");
 
   useEffect(() => {
     if (!id) return;
@@ -35,9 +36,17 @@ export default function UserProfile() {
     <div className="page-container">
       <div className="card">
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* Header + Edit button */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <h1>{user.name}</h1>
 
+          {/* ✔ Button only for logged-in user */}
           {user._id === loggedInUserId && (
             <Link to="/edit-profile" className="btn btn-primary">
               Edit Profile
@@ -46,7 +55,9 @@ export default function UserProfile() {
         </div>
 
         <p className="muted">{user.email}</p>
-        <p className="muted">Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
+        <p className="muted">
+          Joined: {new Date(user.createdAt).toLocaleDateString()}
+        </p>
 
         <hr style={{ margin: "20px 0" }} />
 
@@ -60,6 +71,7 @@ export default function UserProfile() {
               <li key={post._id} className="post-item">
                 <h4>{post.title}</h4>
                 <p>{post.content.slice(0, 120)}...</p>
+
                 <Link className="btn btn-primary" to={`/post/${post._id}`}>
                   Read More →
                 </Link>
