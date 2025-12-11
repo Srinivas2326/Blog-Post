@@ -1,8 +1,8 @@
 const express = require("express");
-const protect = require("../middleware/authMiddleware");
-const authorizeRoles = require("../middleware/roleMiddleware");
+const router = express.Router();
 
 const {
+  getUserPublicProfile,
   getAllUsers,
   getUserById,
   updateUser,
@@ -10,9 +10,13 @@ const {
   deleteUser
 } = require("../controllers/userController");
 
-const router = express.Router();
+const protect = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
 
-// Admin-only routes
+// ✅ PUBLIC USER PROFILE ROUTE
+router.get("/profile/:id", getUserPublicProfile);
+
+// ✅ ADMIN ROUTES
 router.get("/", protect, authorizeRoles("admin"), getAllUsers);
 router.get("/:id", protect, authorizeRoles("admin"), getUserById);
 router.put("/:id", protect, authorizeRoles("admin"), updateUser);

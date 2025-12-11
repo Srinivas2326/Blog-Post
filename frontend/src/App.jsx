@@ -10,8 +10,10 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import CreatePost from "./pages/CreatePost";
 import EditPost from "./pages/EditPost";
+
+import AllPosts from "./pages/AllPosts";
 import PostDetails from "./pages/PostDetails";
-import AllPosts from "./pages/AllPosts";   
+import UserProfile from "./pages/UserProfile";
 
 import NotFound from "./pages/NotFound";
 
@@ -22,23 +24,23 @@ export default function App() {
 
       <main className="main-content">
         <Routes>
-
-          {/* PUBLIC ROUTES */}
+          {/* Public Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* PUBLIC BLOG LIST PAGE */}
-          <Route path="/posts" element={<AllPosts />} />   
+          {/* Public Blog Routes */}
+          <Route path="/all-posts" element={<AllPosts />} />
+          <Route path="/post/:id" element={<PostDetails />} />
+          <Route path="/user/:id" element={<UserProfile />} />
 
-          {/* PROTECTED ROUTES */}
+          {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/edit-post/:id" element={<EditPost />} />
-            <Route path="/post/:id" element={<PostDetails />} /> 
           </Route>
 
           <Route path="*" element={<NotFound />} />

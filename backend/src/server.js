@@ -1,4 +1,3 @@
-// src/server.js
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -16,9 +15,7 @@ dotenv.config();
 
 const app = express();
 
-// ------------------------------
 // Middlewares
-// ------------------------------
 app.use(
   cors({
     origin: "http://localhost:5173", // Frontend URL (Vite)
@@ -29,18 +26,14 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// ------------------------------
 // API Routes
-// ------------------------------
 app.use("/api/auth", authRoutes);         // login, register
 app.use("/api/auth", passwordRoutes);     // forgot/reset password
 app.use("/api/protected", protectedRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
 
-// ------------------------------
 // Health Check Route
-// ------------------------------
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
@@ -48,9 +41,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ------------------------------
 // Connect to Database
-// ------------------------------
 connectDB()
   .then(() => console.log("Database connected successfully"))
   .catch((err) => {
@@ -58,9 +49,7 @@ connectDB()
     process.exit(1);
   });
 
-// ------------------------------
-// Start Server
-// ------------------------------
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
