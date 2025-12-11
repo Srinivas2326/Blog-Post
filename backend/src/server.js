@@ -15,25 +15,46 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares
+/* =====================================================
+   ⭐ CORRECT CORS SETTINGS (LOCAL + DEPLOY)
+===================================================== */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://blog-post-5elh.onrender.com",        // Render backend
+  "https://your-frontend-domain.netlify.app",   // Update after frontend deploy
+];
+
 app.use(
   cors({
-    origin: "*", 
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      console.log("❌ Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS: " + origin), false);
+    },
     credentials: true,
   })
 );
 
+/* =====================================================
+   ⭐ MIDDLEWARE
+===================================================== */
 app.use(express.json());
 app.use(cookieParser());
 
-// API Routes
-app.use("/api/auth", authRoutes);         // login, register
-app.use("/api/auth", passwordRoutes);     // forgot/reset password
+/* =====================================================
+   ⭐ API ROUTES
+===================================================== */
+app.use("/api/auth", authRoutes);
+app.use("/api/auth", passwordRoutes);
 app.use("/api/protected", protectedRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
 
-// Health Check Route
+/* =====================================================
+   ⭐ HEALTH CHECK
+===================================================== */
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
@@ -41,17 +62,21 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Connect to Database
+/* =====================================================
+   ⭐ DATABASE CONNECTION
+===================================================== */
 connectDB()
-  .then(() => console.log("Database connected successfully"))
+  .then(() => console.log("✅ Database connected successfully"))
   .catch((err) => {
-    console.error("Database connection failed:", err);
+    console.error("❌ Database connection failed:", err);
     process.exit(1);
   });
 
-
+/* =====================================================
+   ⭐ START SERVER
+===================================================== */
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on port ${PORT}`)
+);

@@ -1,11 +1,10 @@
-// src/utils/api.js
 import axios from "axios";
 
 export const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://blog-post-5elh.onrender.com/api",
+  withCredentials: true,  // required for cookies + refresh tokens
 });
 
-// Automatically attach token
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("blog_token");
