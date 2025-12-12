@@ -5,38 +5,60 @@ import { API } from "../utils/api";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  /* ------------------------------------
+        USER + TOKEN INITIAL STATE
+  --------------------------------------*/
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem("blog_user");
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem("blog_user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem("blog_token"));
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem("blog_token") || null;
+  });
+
   const [loading, setLoading] = useState(false);
 
-  /* Restore state from localStorage on refresh */
+  /* ------------------------------------
+        RESTORE SESSION ON REFRESH
+  --------------------------------------*/
   useEffect(() => {
-    const storedUser = localStorage.getItem("blog_user");
-    const storedToken = localStorage.getItem("blog_token");
+    try {
+      const storedUser = localStorage.getItem("blog_user");
+      const storedToken = localStorage.getItem("blog_token");
 
-    if (storedUser) setUser(JSON.parse(storedUser));
-    if (storedToken) setToken(storedToken);
+      if (storedUser) setUser(JSON.parse(storedUser));
+      if (storedToken) setToken(storedToken);
+    } catch (err) {
+      console.error("Error restoring auth state:", err);
+    }
   }, []);
 
-  /* LOGIN */
+  /* ------------------------------------
+                LOGIN
+  --------------------------------------*/
   const login = async (email, password) => {
     setLoading(true);
     try {
       const res = await API.post("/auth/login", { email, password });
 
-      const { accessToken, user } = res.data;
-      if (!accessToken || !user)
-        return { success: false, message: "Invalid server response" };
+      const { accessToken, user: userData } = res.data;
 
-      const fixedUser = { ...user, _id: user._id || user.id };
+      if (!accessToken || !userData) {
+        return { success: false, message: "Invalid server response" };
+      }
+
+      // Ensure user has _id property
+      const fixedUser = { ...userData, _id: userData._id || userData.id };
 
       setUser(fixedUser);
       setToken(accessToken);
 
+      // Persist
       localStorage.setItem("blog_user", JSON.stringify(fixedUser));
       localStorage.setItem("blog_token", accessToken);
       localStorage.setItem("blog_userId", fixedUser._id);
@@ -53,25 +75,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /* REGISTER */
+  /* ------------------------------------
+                REGISTER
+  --------------------------------------*/
   const register = async (name, email, password) => {
     setLoading(true);
     try {
       const res = await API.post("/auth/register", { name, email, password });
 
-      const { accessToken, user } = res.data || {};
+      const { accessToken, user: userData } = res.data || {};
 
-      if (accessToken && user) {
-        const fixedUser = { ...user, _id: user._id || user.id };
+      if (accessToken && userData) {
+        const fixedUser = { ...userData, _id: userData._id || userData.id };
 
         setUser(fixedUser);
         setToken(accessToken);
 
         localStorage.setItem("blog_user", JSON.stringify(fixedUser));
         localStorage.setItem("blog_token", accessToken);
+
+        return { success: true };
       }
 
-      return { success: true };
+      return {
+        success: false,
+        message: "Invalid response from server",
+      };
     } catch (err) {
       console.error("REGISTER ERROR:", err);
       return {
@@ -83,7 +112,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /* LOGOUT */
+  /* ------------------------------------
+                LOGOUT
+  --------------------------------------*/
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -92,9 +123,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("blog_token");
     localStorage.removeItem("blog_userId");
 
+    // call backend logout (ignore failures)
     API.post("/auth/logout").catch(() => {});
   };
 
+  /* ------------------------------------
+                EXPORT CONTEXT
+  --------------------------------------*/
   return (
     <AuthContext.Provider
       value={{
@@ -104,6 +139,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        setUser,           // <-- IMPORTANT: needed for EditProfile updates
         isAuthenticated: !!token,
       }}
     >

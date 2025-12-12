@@ -15,7 +15,7 @@ export default function EditProfile() {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Sync values when user context changes
+  // Sync form values when user context updates
   useEffect(() => {
     if (user) {
       setName(user.name);
@@ -28,25 +28,32 @@ export default function EditProfile() {
   -------------------------------------------------------*/
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    setMessage(null);
     setLoading(true);
+    setMessage(null);
 
     try {
       const res = await API.put("/users/me", { name, email });
 
+      // Validate response
+      if (!res.data || !res.data.user) {
+        throw new Error("Invalid server response");
+      }
+
       const updatedUser = res.data.user;
 
-      // update context + localStorage
+      // Update context + localStorage
       setUser(updatedUser);
       localStorage.setItem("blog_user", JSON.stringify(updatedUser));
 
       setMessage({
         type: "success",
-        text: "Profile updated successfully.",
+        text: "Profile updated successfully!",
       });
     } catch (err) {
-      const msg = err.response?.data?.message || "Update failed.";
-      setMessage({ type: "error", text: msg });
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Update failed. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -54,11 +61,6 @@ export default function EditProfile() {
 
   /* -----------------------------------------------------
         CHANGE PASSWORD  (PUT /users/change-password)
-        Backend expects:
-        {
-           currentPassword: "",
-           newPassword: ""
-        }
   -------------------------------------------------------*/
   const handleChangePassword = async (e) => {
     e.preventDefault();
