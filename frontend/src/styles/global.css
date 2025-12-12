@@ -1,4 +1,6 @@
-
+/* ==========================================================
+   LIGHT THEME (default) — Cyber Glass Pastel
+========================================================== */
 :root {
   --bg: #eef2ff;
   --bg2: #f8f9ff;
@@ -6,8 +8,8 @@
   --glass: rgba(255, 255, 255, 0.55);
   --border: rgba(255, 255, 255, 0.35);
 
-  --accent: #7c3aed;    /* Purple */
-  --accent2: #6366f1;   /* Indigo */
+  --accent: #7c3aed;   /* Purple */
+  --accent2: #6366f1;  /* Indigo */
 
   --text: #0b1220;
   --muted: #6b7280;
@@ -16,7 +18,9 @@
 }
 
 
-   /* CYBER DARK MODE  */
+/* ==========================================================
+   CYBER DARK MODE — Neon Purple Glow
+========================================================== */
 html[data-theme="dark"] {
   --bg: #060614;
   --bg2: #0b0b1f;
@@ -34,7 +38,9 @@ html[data-theme="dark"] {
 }
 
 
-   /* GLOBAL BODY */
+/* ==========================================================
+   GLOBAL BODY
+========================================================== */
 body {
   margin: 0;
   background: radial-gradient(circle at top left, var(--bg), var(--bg2));
@@ -44,7 +50,9 @@ body {
 }
 
 
-   /* GLASS CARD */
+/* ==========================================================
+   GLASS CARD
+========================================================== */
 .card {
   background: var(--card-bg);
   border-radius: 18px;
@@ -56,7 +64,9 @@ body {
 }
 
 
-   /* POST CARD */
+/* ==========================================================
+   POST CARD
+========================================================== */
 .post-item {
   background: var(--card-bg);
   padding: 20px;
@@ -73,7 +83,9 @@ body {
 }
 
 
-    /* INPUTS  */
+/* ==========================================================
+   INPUTS — Rounded Glass Neon Glow
+========================================================== */
 input,
 textarea {
   width: 100%;
@@ -105,8 +117,11 @@ textarea {
 }
 
 
-   /* BUTTONS */
+/* ==========================================================
+   BUTTONS — Primary, Outline, Danger
+========================================================== */
 
+/* Primary */
 .btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   padding: 0.65rem 1.4rem;
@@ -124,6 +139,7 @@ textarea {
   box-shadow: 0 6px 20px rgba(140, 90, 255, 0.45);
 }
 
+/* Outline */
 .btn-outline {
   background: transparent;
   border: 1px solid var(--border);
@@ -139,23 +155,53 @@ textarea {
   color: var(--accent);
 }
 
+/* Danger (delete button) */
+.btn-danger {
+  background: rgba(255, 80, 80, 0.15);
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  color: #ff5a5a;
+  padding: 0.55rem 1.2rem;
+  border-radius: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  font-weight: 500;
+  transition: 0.25s ease;
+}
 
-   /* THEME TOGGLE BUTTON */
+html[data-theme="dark"] .btn-danger {
+  background: rgba(255, 80, 80, 0.12);
+  border: 1px solid rgba(255, 100, 100, 0.45);
+  color: #ff8a8a;
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(255, 80, 80, 0.55);
+  background: rgba(255, 80, 80, 0.25);
+}
+
+
+/* ==========================================================
+   THEME TOGGLE BUTTON (Sun/Moon)
+========================================================== */
 .theme-btn {
   background: transparent;
   border: none;
   font-size: 1.4rem;
   cursor: pointer;
   padding: 6px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, color 0.3s;
 }
 
 .theme-btn:hover {
   transform: scale(1.2);
+  color: var(--accent);
 }
 
 
-   /* TEXT HELPERS */
+/* ==========================================================
+   TEXT HELPERS
+========================================================== */
 .muted {
   color: var(--muted);
 }
