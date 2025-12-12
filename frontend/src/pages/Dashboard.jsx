@@ -9,28 +9,44 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token || !user) return;
+    if (!token || !user?._id) return;
 
-    const load = async () => {
+    const fetchPosts = async () => {
       try {
-        const res = await API.get("/posts/mine");
-        setPosts(res.data);
-      } catch (err) {
-        console.error("Error loading posts:", err);
+        const res = await API.get("/posts");
+
+        console.log("All posts from backend:", res.data);
+        console.log("Logged user:", user);
+
+        // Filter posts belonging ONLY to logged user
+        const filtered = res.data.filter(
+          (post) => post?.author?._id === user?._id
+        );
+
+        console.log("Filtered user posts:", filtered);
+
+        // ✅ Set ONLY filtered posts
+        setPosts(filtered);
+
+      } catch (error) {
+        console.error("Error fetching posts:", error);
       }
     };
-
-    load();
+    
+    fetchPosts();
   }, [token, user]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this post?")) return;
+    if (!window.confirm("Are you sure?")) return;
 
     try {
       await API.delete(`/posts/${id}`);
+
+      // Remove deleted post from UI
       setPosts((prev) => prev.filter((p) => p._id !== id));
-    } catch (err) {
-      alert("Could not delete post");
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("You cannot delete this post");
     }
   };
 
@@ -42,7 +58,9 @@ export default function Dashboard() {
           <p className="muted">Welcome back, {user?.name}</p>
         </div>
 
-        <Link to="/create-post" className="btn btn-primary">+ New Post</Link>
+        <Link to="/create-post" className="btn btn-primary">
+          + New Post
+        </Link>
       </div>
 
       <div className="card">
@@ -55,9 +73,9 @@ export default function Dashboard() {
             {posts.map((post) => (
               <li key={post._id} className="post-item">
                 <h4>{post.title}</h4>
-                <p>{post.content.slice(0, 140)}...</p>
+                <p>{post.content?.slice(0, 120)}...</p>
 
-                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
                   <button
                     className="btn btn-outline"
                     onClick={() => navigate(`/edit-post/${post._id}`)}
