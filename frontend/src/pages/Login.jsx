@@ -13,12 +13,15 @@ export default function Login() {
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-        // NORMAL EMAIL + PASSWORD LOGIN
+  /* --------------------------------------------------------
+        NORMAL EMAIL + PASSWORD LOGIN
+  ---------------------------------------------------------*/
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -32,16 +35,19 @@ export default function Login() {
     }
   };
 
-                // GOOGLE LOGIN
+  /* --------------------------------------------------------
+                  GOOGLE LOGIN HANDLER
+  ---------------------------------------------------------*/
   const handleGoogleLogin = async () => {
     setError("");
+    setGoogleLoading(true);
 
     try {
-      // Google Login Popup
+      // Firebase popup login
       const result = await signInWithPopup(auth, googleProvider);
       const googleUser = result.user;
 
-      // Send to backend to create/login the user
+      // Send profile to backend to create/login user
       const res = await API.post("/auth/google", {
         name: googleUser.displayName,
         email: googleUser.email,
@@ -53,12 +59,21 @@ export default function Login() {
       // Save session
       localStorage.setItem("blog_user", JSON.stringify(user));
       localStorage.setItem("blog_token", accessToken);
+      localStorage.setItem("blog_userId", user._id);
 
       navigate("/dashboard");
     } catch (err) {
       console.error("GOOGLE LOGIN ERROR:", err);
-      setError(err.response?.data?.message || "Google login failed");
+
+      let message =
+        err.response?.data?.message ||
+        err.message ||
+        "Google login failed";
+
+      setError(message);
     }
+
+    setGoogleLoading(false);
   };
 
   return (
@@ -95,7 +110,10 @@ export default function Login() {
             />
           </div>
 
-          <button className="btn btn-primary full-width" disabled={loading}>
+          <button
+            className="btn btn-primary full-width"
+            disabled={loading}
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
@@ -110,6 +128,7 @@ export default function Login() {
           type="button"
           className="btn btn-outline full-width"
           onClick={handleGoogleLogin}
+          disabled={googleLoading}
           style={{
             display: "flex",
             alignItems: "center",
@@ -122,7 +141,7 @@ export default function Login() {
             alt="Google"
             style={{ width: "18px", height: "18px" }}
           />
-          Continue with Google
+          {googleLoading ? "Connecting..." : "Continue with Google"}
         </button>
 
         {/* ------------------ LINKS ------------------ */}

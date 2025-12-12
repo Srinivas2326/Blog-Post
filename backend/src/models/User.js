@@ -13,20 +13,25 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Email is required"],
       unique: true,
+      lowercase: true,
+      trim: true,
     },
 
-    // ⭐ For Google OAuth Users – not required
+    // ⭐ For Google OAuth Users
     googleId: {
       type: String,
       default: null,
     },
 
+    // Normal password login users
     password: {
       type: String,
       minlength: 6,
       required: function () {
-        return !this.googleId; // Password required only for non-Google users
+        // Password required ONLY IF not Google login
+        return !this.googleId;
       },
+      select: false, // Important: do NOT return password in API responses
     },
 
     role: {
@@ -45,28 +50,38 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
-    // ⭐ Forgot / Reset password fields
+    // ⭐ Forgot password support
     resetPasswordToken: String,
     resetPasswordExpires: Date,
   },
   { timestamps: true }
 );
 
-    // HASH PASSWORD (only for non-Google users)
-userSchema.pre("save", async function () {
-  if (!this.isModified("password") || !this.password) return;
+/* ============================================================
+   HASH PASSWORD ONLY IF:
+   1) user is NOT Google user
+   2) password is new/modified
+============================================================ */
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || !this.password) return next();
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+
+  next();
 });
 
-    //  PASSWORD MATCH CHECK
+/* ============================================================
+   CHECK PASSWORD MATCH (Email/Password Users Only)
+============================================================ */
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  if (!this.password) return false;
+  if (!this.password) return false; // Google users have no password
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-    //  RESET TOKEN GENERATOR
+/* ============================================================
+   GENERATE RESET PASSWORD TOKEN
+============================================================ */
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
 
@@ -75,7 +90,7 @@ userSchema.methods.getResetPasswordToken = function () {
     .update(resetToken)
     .digest("hex");
 
-  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
   return resetToken;
 };

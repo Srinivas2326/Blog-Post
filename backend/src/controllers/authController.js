@@ -3,21 +3,18 @@ const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../utils/generateToken");
-const bcrypt = require("bcryptjs");
 
 /* ============================================================
-                      REGISTER (EMAIL/PASSWORD)
+                      REGISTER
 ============================================================ */
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "Email already exists" });
 
-    // Create user normally
     const user = await User.create({
       name,
       email,
@@ -28,7 +25,7 @@ exports.registerUser = async (req, res) => {
     return res.status(201).json({
       message: "User registered successfully",
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
         role: user.role,
         email: user.email,
@@ -40,32 +37,28 @@ exports.registerUser = async (req, res) => {
 };
 
 /* ============================================================
-                      LOGIN (EMAIL/PASSWORD)
+                      LOGIN (EMAIL + PASSWORD)
 ============================================================ */
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email });
     if (!user)
       return res.status(400).json({ message: "Invalid email or password" });
 
-    // Compare password (if account has a password)
-    const isMatch = user.password
-      ? await user.matchPassword(password)
-      : false;
+    // If user registered with Google, they cannot log in with password
+    if (!user.password)
+      return res.status(400).json({ message: "This account uses Google login. Please continue with Google." });
 
+    const isMatch = await user.matchPassword(password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid email or password" });
 
-    // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-
     const isProd = process.env.NODE_ENV === "production";
 
-    // Store refresh token as HTTP-only cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd,
@@ -73,7 +66,7 @@ exports.loginUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.json({
+    return res.status(200).json({
       message: "Login successful",
       accessToken,
       user: {
@@ -83,6 +76,7 @@ exports.loginUser = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -100,35 +94,28 @@ exports.googleAuthUser = async (req, res) => {
 
     let user = await User.findOne({ email });
 
-    // ---------------------------------------------------------
-    // CASE 1: User already exists → Login
-    // ---------------------------------------------------------
     if (user) {
-      // If user was originally email/password and now using Google,
-      // store googleId safely:
+      // Update googleId for existing user
       if (!user.googleId) {
         user.googleId = googleId;
+        user.password = null; // remove password login for safety
         await user.save();
       }
     } else {
-      // ---------------------------------------------------------
-      // CASE 2: First time Google login → Create user
-      // ---------------------------------------------------------
+      // Create new Google account
       user = await User.create({
         name,
         email,
         googleId,
-        role: "author", // default role for google users
+        password: null,
+        role: "author",
       });
     }
 
-    // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-
     const isProd = process.env.NODE_ENV === "production";
 
-    // Store Refresh token
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd,
@@ -136,7 +123,7 @@ exports.googleAuthUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.json({
+    return res.status(200).json({
       message: "Google login successful",
       accessToken,
       user: {
@@ -146,7 +133,10 @@ exports.googleAuthUser = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
-    return res.status(500).json({ message: "Google login failed", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Google login failed", error: error.message });
   }
 };
