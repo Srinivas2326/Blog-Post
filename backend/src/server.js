@@ -1,3 +1,6 @@
+// ==========================
+//  IMPORTS
+// ==========================
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -13,37 +16,39 @@ const passwordRoutes = require("./routes/passwordRoutes");
 dotenv.config();
 const app = express();
 
-/* =====================================================
-   ⭐ ALLOWED ORIGINS
-===================================================== */
+
+// =====================================================
+//  ⭐ ALLOWED ORIGINS (NO TRAILING SLASHES)
+// =====================================================
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://blog-post-iota-eosin.vercel.app",
-  "https://blog-post-5elh.onrender.com"
+  "http://localhost:5173",                       // Local frontend
+  "https://blog-post-iota-eosin.vercel.app",     // Vercel frontend
+  "https://blog-post-5elh.onrender.com"          // Backend render domain
 ];
 
-/* =====================================================
-   ⭐ CORS (MUST BE THE FIRST MIDDLEWARE!)
-===================================================== */
+
+// =====================================================
+//  ⭐ MAIN CORS MIDDLEWARE (MUST COME FIRST)
+// =====================================================
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("❌ Blocked by CORS:", origin);
-        callback(new Error("CORS blocked: " + origin));
+        return callback(null, true);
       }
+      console.log("❌ Blocked by CORS:", origin);
+      return callback(new Error("CORS blocked: " + origin));
     },
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-/* =====================================================
-   ⭐ MANUAL HEADERS FOR SAFARI + EDGE SUPPORT
-===================================================== */
+
+// =====================================================
+// ⭐ REQUIRED MANUAL HEADERS (Render needs this)
+// =====================================================
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
@@ -62,31 +67,38 @@ app.use((req, res, next) => {
   next();
 });
 
-/* =====================================================
-   ⭐ EXPRESS MIDDLEWARE
-===================================================== */
+
+// =====================================================
+// ⭐ BODY PARSER + COOKIES
+// =====================================================
 app.use(express.json());
 app.use(cookieParser());
 
-/* =====================================================
-   ⭐ API ROUTES
-===================================================== */
+
+// =====================================================
+// ⭐ ROUTES
+// =====================================================
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 app.use("/api/protected", protectedRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
 
-/* =====================================================
-   ⭐ HEALTH CHECK
-===================================================== */
+
+// =====================================================
+// ⭐ HEALTH CHECK
+// =====================================================
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", message: "Backend is live 🚀" });
+  res.json({
+    status: "ok",
+    message: "Backend is live 🚀",
+  });
 });
 
-/* =====================================================
-   ⭐ CONNECT DATABASE
-===================================================== */
+
+// =====================================================
+// ⭐ DATABASE CONNECTION
+// =====================================================
 connectDB()
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
@@ -94,8 +106,9 @@ connectDB()
     process.exit(1);
   });
 
-/* =====================================================
-   ⭐ START SERVER
-===================================================== */
+
+// =====================================================
+// ⭐ START SERVER
+// =====================================================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
