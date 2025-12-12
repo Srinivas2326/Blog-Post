@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Name is required"],
+      trim: true,
     },
 
     email: {
@@ -17,21 +18,20 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // ⭐ For Google OAuth Users
+    // ⭐ GOOGLE USERS WILL HAVE THIS
     googleId: {
       type: String,
       default: null,
     },
 
-    // Normal password login users
+    // ⭐ PASSWORD ONLY REQUIRED FOR NON-GOOGLE USERS
     password: {
       type: String,
       minlength: 6,
       required: function () {
-        // Password required ONLY IF not Google login
-        return !this.googleId;
+        return !this.googleId; // Google users don't need password
       },
-      select: false, // Important: do NOT return password in API responses
+      select: false, // Never send password in API responses
     },
 
     role: {
@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
-    // ⭐ Forgot password support
+    // ⭐ PASSWORD RESET SUPPORT
     resetPasswordToken: String,
     resetPasswordExpires: Date,
   },
@@ -58,12 +58,13 @@ const userSchema = new mongoose.Schema(
 );
 
 /* ============================================================
-   HASH PASSWORD ONLY IF:
-   1) user is NOT Google user
-   2) password is new/modified
+   HASH PASSWORD (ONLY WHEN CHANGED + ONLY FOR NORMAL USERS)
 ============================================================ */
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password") || !this.password) return next();
+  // If no password or unchanged → skip hashing
+  if (!this.isModified("password") || !this.password) {
+    return next();
+  }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
@@ -72,7 +73,7 @@ userSchema.pre("save", async function (next) {
 });
 
 /* ============================================================
-   CHECK PASSWORD MATCH (Email/Password Users Only)
+   PASSWORD MATCH CHECK (ONLY EMAIL/PASSWORD USERS)
 ============================================================ */
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false; // Google users have no password
@@ -80,7 +81,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 /* ============================================================
-   GENERATE RESET PASSWORD TOKEN
+   GENERATE PASSWORD RESET TOKEN
 ============================================================ */
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
