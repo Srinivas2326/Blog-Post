@@ -58,29 +58,25 @@ const userSchema = new mongoose.Schema(
 );
 
 /* ============================================================
-   HASH PASSWORD (ONLY WHEN CHANGED + ONLY FOR NORMAL USERS)
+   HASH PASSWORD — FIXED VERSION (NO next(), NO callback)
 ============================================================ */
-userSchema.pre("save", async function (next) {
-  try {
-    // Skip hashing if password is not modified OR password doesn't exist (Google login)
-    if (!this.isModified("password") || !this.password) {
-      return next();
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-
-    next();
-  } catch (error) {
-    next(error);
+userSchema.pre("save", async function () {
+  // Skip hashing if:
+  // 1. Password NOT modified, or
+  // 2. Password missing (Google user)
+  if (!this.isModified("password") || !this.password) {
+    return;
   }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 /* ============================================================
-   PASSWORD MATCH CHECK (ONLY EMAIL/PASSWORD USERS)
+   PASSWORD MATCH CHECK
 ============================================================ */
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  if (!this.password) return false; // Google users have no password stored
+  if (!this.password) return false; // Google users have no password
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
@@ -95,7 +91,8 @@ userSchema.methods.getResetPasswordToken = function () {
     .update(resetToken)
     .digest("hex");
 
-  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // expires in 10 mins
+  // Valid for 10 minutes
+  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
 
   return resetToken;
 };
