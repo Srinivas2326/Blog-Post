@@ -106,36 +106,39 @@ exports.googleAuthUser = async (req, res) => {
   try {
     const { email, name, googleId } = req.body;
 
+    console.log("📥 Google Login Payload:", req.body);
+
     if (!email || !googleId) {
-      return res
-        .status(400)
-        .json({ message: "Invalid Google auth data" });
+      console.log("❌ Missing fields in Google Login");
+      return res.status(400).json({ message: "Invalid Google auth data" });
     }
 
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email }).select("+password");
 
     if (user) {
-      // If existing normal user switches to Google
+      console.log("👤 Existing user found");
+
+      // If user is email/pass account converting → Google login
       if (!user.googleId) {
+        console.log("🔄 Converting Password user → Google login");
         user.googleId = googleId;
-        user.password = null; // disable password login
+        user.password = undefined;
         await user.save();
       }
     } else {
-      // First-time Google user → Create new user
+      console.log("🆕 Creating NEW Google user");
+
       user = await User.create({
         name,
         email,
         googleId,
-        password: null, // no password for Google users
+        password: undefined,
         role: "author",
       });
     }
 
-    // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-
     const isProd = process.env.NODE_ENV === "production";
 
     res.cookie("refreshToken", refreshToken, {
@@ -145,6 +148,7 @@ exports.googleAuthUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    console.log("✅ Google Login Success");
     return res.status(200).json({
       message: "Google login successful",
       accessToken,
@@ -155,7 +159,9 @@ exports.googleAuthUser = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
+    console.error("🔥 GOOGLE LOGIN ERROR:", error);
     return res.status(500).json({
       message: "Google login failed",
       error: error.message,
