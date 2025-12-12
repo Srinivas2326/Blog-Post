@@ -25,9 +25,7 @@ app.use(
     credentials: true, // required for cookies
   })
 );
-/* =====================================================
-   ⭐ FIXED CORS SETTINGS (LOCAL + FRONTEND DEPLOY)
-===================================================== */
+  //  ⭐ FIXED CORS SETTINGS (LOCAL + FRONTEND DEPLOY)
 const allowedOrigins = [
   "http://localhost:5173",
   "https://your-frontend-domain.netlify.app"
@@ -62,24 +60,18 @@ app.use((req, res, next) => {
 });
 
 
-/* =====================================================
-   ⭐ MIDDLEWARE
-===================================================== */
+  //  ⭐ MIDDLEWARE
 app.use(express.json());
 app.use(cookieParser());
 
-/* =====================================================
-   ⭐ API ROUTES
-===================================================== */
+  //  ⭐ API ROUTES
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 app.use("/api/protected", protectedRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
 
-/* =====================================================
-   ⭐ HEALTH CHECK
-===================================================== */
+  //  ⭐ HEALTH CHECK
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
@@ -87,9 +79,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-/* =====================================================
-   ⭐ DATABASE CONNECTION
-===================================================== */
+  //  ⭐ DATABASE CONNECTION
 connectDB()
   .then(() => console.log("✅ Database connected successfully"))
   .catch((err) => {
@@ -97,9 +87,7 @@ connectDB()
     process.exit(1);
   });
 
-/* =====================================================
-   ⭐ START SERVER
-===================================================== */
+  //  ⭐ START SERVER
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>
