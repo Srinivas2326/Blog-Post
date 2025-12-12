@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import { ThemeProvider } from "./context/ThemeContext";
+
 // Auth Pages
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -27,37 +29,34 @@ import NotFound from "./pages/NotFound.jsx";
 
 export default function App() {
   return (
-    <div className="app-root">
-      <Navbar />
+    <ThemeProvider>
+      <div className="app-root">
+        <Navbar />
+        <main className="main-content">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-      <main className="main-content">
-        <Routes>
+            <Route path="/all-posts" element={<AllPosts />} />
+            <Route path="/post/:id" element={<PostDetails />} />
+            <Route path="/user/:id" element={<UserProfile />} />
 
-          {/* Public Routes */}
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/create-post" element={<CreatePost />} />
+              <Route path="/edit-post/:id" element={<EditPost />} />
+              <Route path="/edit-profile" element={<EditProfile />} />
+              <Route path="/change-password" element={<ChangePassword />} />
+            </Route>
 
-          {/* Public Blog Routes */}
-          <Route path="/all-posts" element={<AllPosts />} />
-          <Route path="/post/:id" element={<PostDetails />} />
-          <Route path="/user/:id" element={<UserProfile />} />
-
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/create-post" element={<CreatePost />} />
-            <Route path="/edit-post/:id" element={<EditPost />} />
-            <Route path="/edit-profile" element={<EditProfile />} />
-            <Route path="/change-password" element={<ChangePassword />} />
-          </Route>
-
-          {/* 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-    </div>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </div>
+    </ThemeProvider>
   );
 }
