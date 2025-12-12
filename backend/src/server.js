@@ -4,7 +4,6 @@ const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 
-// Import Routes
 const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 const postRoutes = require("./routes/postRoutes");
@@ -12,30 +11,41 @@ const userRoutes = require("./routes/userRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
 
 dotenv.config();
-
 const app = express();
 
 /* =====================================================
-   ⭐ CORRECT CORS SETTINGS (LOCAL + DEPLOY)
+   ⭐ FIXED CORS SETTINGS (LOCAL + FRONTEND DEPLOY)
 ===================================================== */
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://blog-post-5elh.onrender.com",        // Render backend
-  "https://your-frontend-domain.netlify.app",   // Update after frontend deploy
+  "http://localhost:5173",                    // local frontend
+  "https://your-frontend-domain.netlify.app"  // update after frontend deployment
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
+        callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin);
+        callback(new Error("CORS blocked: " + origin));
       }
-      console.log("❌ Blocked by CORS:", origin);
-      return callback(new Error("Not allowed by CORS: " + origin), false);
     },
-    credentials: true,
+    credentials: true, // required for cookies
   })
 );
+
+// Fix for Axios sending credentials
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
+});
 
 /* =====================================================
    ⭐ MIDDLEWARE
