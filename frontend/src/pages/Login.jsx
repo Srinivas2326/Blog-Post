@@ -19,9 +19,7 @@ export default function Login() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  /*-------------------------------------------------------
-      NORMAL LOGIN (EMAIL + PASSWORD)
-  --------------------------------------------------------*/
+      // NORMAL LOGIN (EMAIL + PASSWORD)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -35,9 +33,7 @@ export default function Login() {
     }
   };
 
-  /*-------------------------------------------------------
-                      GOOGLE LOGIN
-  --------------------------------------------------------*/
+                      // GOOGLE LOGIN
   const handleGoogleLogin = async () => {
     setError("");
     setGoogleLoading(true);
@@ -61,7 +57,7 @@ export default function Login() {
       localStorage.setItem("blog_token", accessToken);
       localStorage.setItem("blog_userId", user._id);
 
-      // ⭐ Update AuthContext immediately
+      //  Update AuthContext immediately
       login(user, accessToken);
 
       // Redirect

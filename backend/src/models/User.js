@@ -18,20 +18,20 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // ⭐ GOOGLE USERS WILL HAVE THIS
+    //  GOOGLE USERS WILL HAVE THIS
     googleId: {
       type: String,
       default: null,
     },
 
-    // ⭐ PASSWORD ONLY REQUIRED FOR NON-GOOGLE USERS
+    //  PASSWORD ONLY REQUIRED FOR NON-GOOGLE USERS
     password: {
       type: String,
       minlength: 6,
       required: function () {
         return !this.googleId; // Google users don't need password
       },
-      select: false, // Never send password in responses
+      select: false, 
     },
 
     role: {
@@ -50,20 +50,16 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
-    // ⭐ PASSWORD RESET SUPPORT
+    //  PASSWORD RESET SUPPORT
     resetPasswordToken: String,
     resetPasswordExpires: Date,
   },
   { timestamps: true }
 );
 
-/* ============================================================
-   HASH PASSWORD — FIXED VERSION (NO next(), NO callback)
-============================================================ */
+  //  HASH PASSWORD 
 userSchema.pre("save", async function () {
-  // Skip hashing if:
-  // 1. Password NOT modified, or
-  // 2. Password missing (Google user)
+
   if (!this.isModified("password") || !this.password) {
     return;
   }
@@ -72,17 +68,13 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-/* ============================================================
-   PASSWORD MATCH CHECK
-============================================================ */
+  //  PASSWORD MATCH CHECK
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false; // Google users have no password
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-/* ============================================================
-   GENERATE PASSWORD RESET TOKEN
-============================================================ */
+  //  GENERATE PASSWORD RESET TOKEN
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
 

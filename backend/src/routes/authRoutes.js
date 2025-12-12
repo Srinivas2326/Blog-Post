@@ -11,7 +11,7 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// ⭐ Google OAuth Login (Frontend → Backend)
+//  Google OAuth Login (Frontend → Backend)
 router.post("/google", googleAuthUser);
 
 module.exports = router;

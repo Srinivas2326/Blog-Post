@@ -2,10 +2,8 @@ const User = require("../models/User");
 const Post = require("../models/Post");
 const bcrypt = require("bcryptjs");
 
-/* =====================================================
-   PUBLIC USER PROFILE  (Anyone can view)
-   GET /users/profile/:id
-====================================================== */
+  //  PUBLIC USER PROFILE  (Anyone can view)
+  //  GET /users/profile/:id
 exports.getUserPublicProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
@@ -23,10 +21,8 @@ exports.getUserPublicProfile = async (req, res) => {
 };
 
 
-/* =====================================================
-   UPDATE MY PROFILE  (Logged-in user)
-   PUT /users/me
-====================================================== */
+  //  UPDATE MY PROFILE  (Logged-in user)
+  //  PUT /users/me
 exports.updateMyProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -61,10 +57,8 @@ exports.updateMyProfile = async (req, res) => {
 };
 
 
-/* =====================================================
-   CHANGE PASSWORD  (Logged-in user)
-   PUT /users/change-password
-====================================================== */
+  //  CHANGE PASSWORD  (Logged-in user)
+  //  PUT /users/change-password
 exports.changePassword = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -86,7 +80,7 @@ exports.changePassword = async (req, res) => {
     // Assign new password (pre-save hook will hash it)
     user.password = newPassword;
 
-    await user.save(); // triggers schema.pre("save") → hashes password
+    await user.save(); 
 
     res.json({ message: "Password changed successfully" });
 
@@ -96,9 +90,7 @@ exports.changePassword = async (req, res) => {
 };
 
 
-/* =====================================================
-   ADMIN CONTROLLERS
-====================================================== */
+  //  ADMIN CONTROLLERS
 
 exports.getAllUsers = async (req, res) => {
   try {

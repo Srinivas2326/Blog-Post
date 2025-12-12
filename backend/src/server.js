@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -15,22 +14,16 @@ const passwordRoutes = require("./routes/passwordRoutes");
 dotenv.config();
 const app = express();
 
-/* ---------------------------
-   TRUST PROXY (important for secure cookies behind proxies)
-   --------------------------- */
+  //  TRUST PROXY (important for secure cookies behind proxies)
 app.set("trust proxy", 1);
 
-/* ==============================================
-   ALLOWED ORIGINS (Dynamic for Deployment)
-   Provide ALLOWED_ORIGINS in your environment, comma-separated
-============================================== */
+  //  ALLOWED ORIGINS (Dynamic for Deployment)
+  //  Provide ALLOWED_ORIGINS in your environment, comma-separated
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
   .split(",")
   .map((o) => o.trim());
 
-/* ==============================================
-   CORS CONFIG (explicit)
-============================================== */
+  //  CORS CONFIG (explicit)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (!origin || allowedOrigins.includes(origin)) {
@@ -51,15 +44,11 @@ app.use((req, res, next) => {
   }
 });
 
-/* ==============================================
-   MIDDLEWARE
-============================================== */
+  //  MIDDLEWARE
 app.use(express.json());
 app.use(cookieParser());
 
-/* ==============================================
-   ROUTES
-============================================== */
+  //  ROUTES
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 app.use("/api/protected", protectedRoutes);
@@ -70,9 +59,7 @@ app.get("/api/health", (req, res) =>
   res.json({ status: "ok", message: "Backend is live 🚀" })
 );
 
-/* ==============================================
-   DB + SERVER START
-============================================== */
+  //  DB + SERVER START
 connectDB()
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {

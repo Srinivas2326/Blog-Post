@@ -1,8 +1,6 @@
 const Post = require("../models/Post");
 
-/* -----------------------------------------------------
-   CREATE POST
------------------------------------------------------ */
+  //  CREATE POST
 exports.createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -21,9 +19,7 @@ exports.createPost = async (req, res) => {
   }
 };
 
-/* -----------------------------------------------------
-   GET MY POSTS (dashboard)
------------------------------------------------------ */
+  //  GET MY POSTS (dashboard)
 exports.getMyPosts = async (req, res) => {
   try {
     const posts = await Post.find({ author: req.user._id })
@@ -35,9 +31,7 @@ exports.getMyPosts = async (req, res) => {
   }
 };
 
-/* -----------------------------------------------------
-   GET ALL POSTS
------------------------------------------------------ */
+  //  GET ALL POSTS
 exports.getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
@@ -50,9 +44,7 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
-/* -----------------------------------------------------
-   GET POST BY ID
------------------------------------------------------ */
+  //  GET POST BY ID
 exports.getPostById = async (req, res) => {
   try {
     await Post.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
@@ -68,9 +60,7 @@ exports.getPostById = async (req, res) => {
   }
 };
 
-/* -----------------------------------------------------
-   UPDATE POST
------------------------------------------------------ */
+  //  UPDATE POST
 exports.updatePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -89,9 +79,7 @@ exports.updatePost = async (req, res) => {
   }
 };
 
-/* -----------------------------------------------------
-   DELETE POST
------------------------------------------------------ */
+  //  DELETE POST
 exports.deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);

@@ -35,7 +35,6 @@ export default function UserProfile() {
     <div className="page-container">
       <div className="card">
 
-        {/* Header + Edit button */}
         <div
           style={{
             display: "flex",
@@ -44,8 +43,6 @@ export default function UserProfile() {
           }}
         >
           <h1>{user.name}</h1>
-
-          {/* ✔ Button only for logged-in user */}
           {user._id === loggedInUserId && (
             <Link to="/edit-profile" className="btn btn-primary">
               Edit Profile

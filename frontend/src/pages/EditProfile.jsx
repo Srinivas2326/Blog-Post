@@ -1,4 +1,3 @@
-// src/pages/EditProfile.jsx
 import { useState, useEffect } from "react";
 import { API } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
@@ -23,9 +22,7 @@ export default function EditProfile() {
     }
   }, [user]);
 
-  /* -----------------------------------------------------
-        UPDATE PROFILE  (PUT /users/me)
-  -------------------------------------------------------*/
+        // UPDATE PROFILE  (PUT /users/me)
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -59,9 +56,7 @@ export default function EditProfile() {
     }
   };
 
-  /* -----------------------------------------------------
-        CHANGE PASSWORD  (PUT /users/change-password)
-  -------------------------------------------------------*/
+        // CHANGE PASSWORD  (PUT /users/change-password)
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setMessage(null);

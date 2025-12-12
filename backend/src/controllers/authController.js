@@ -4,9 +4,7 @@ const {
   generateRefreshToken,
 } = require("../utils/generateToken");
 
-/* ============================================================
-                      REGISTER (EMAIL + PASSWORD)
-============================================================ */
+                      // REGISTER (EMAIL + PASSWORD)
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -38,9 +36,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-/* ============================================================
-                 LOGIN (EMAIL + PASSWORD)
-============================================================ */
+                //  LOGIN (EMAIL + PASSWORD)
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -88,9 +84,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-/* ============================================================
-                        GOOGLE AUTH LOGIN
-============================================================ */
+                        // GOOGLE AUTH LOGIN
 exports.googleAuthUser = async (req, res) => {
   try {
     const { email, name, googleId } = req.body;
@@ -109,7 +103,7 @@ exports.googleAuthUser = async (req, res) => {
         console.log("🔄 Converting Password user → Google login");
 
         user.googleId = googleId;
-        user.password = null; // IMPORTANT FIX
+        user.password = null; 
         await user.save({ validateBeforeSave: false });
       }
     } else {
@@ -119,7 +113,7 @@ exports.googleAuthUser = async (req, res) => {
         name,
         email,
         googleId,
-        password: null, // IMPORTANT FIX
+        password: null, 
         role: "author",
       });
     }

@@ -2,9 +2,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 
-/* ==============================================
-   SEND PASSWORD RESET EMAIL
-============================================== */
+  //  SEND PASSWORD RESET EMAIL
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -58,9 +56,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-/* ==============================================
-   RESET PASSWORD USING TOKEN
-============================================== */
+  //  RESET PASSWORD USING TOKEN
 exports.resetPassword = async (req, res) => {
   try {
     const hashedToken = crypto

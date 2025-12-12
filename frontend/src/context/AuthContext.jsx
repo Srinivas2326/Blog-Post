@@ -1,13 +1,10 @@
-// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 import { API } from "../utils/api";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  /* ------------------------------------
-        USER + TOKEN INITIAL STATE
-  --------------------------------------*/
+        // USER + TOKEN INITIAL STATE
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("blog_user");
@@ -23,9 +20,7 @@ export const AuthProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(false);
 
-  /* ------------------------------------
-        RESTORE SESSION ON REFRESH
-  --------------------------------------*/
+        // RESTORE SESSION ON REFRESH
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("blog_user");
@@ -38,11 +33,9 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  /* ------------------------------------
-       MAIN LOGIN FUNCTION (DUAL MODE)
-       MODE 1 → login(email, password)
-       MODE 2 → login(userObject, token)  ← For Google OAuth
-  --------------------------------------*/
+      //  MAIN LOGIN FUNCTION (DUAL MODE)
+      //  MODE 1 → login(email, password)
+      //  MODE 2 → login(userObject, token)  ← For Google OAuth
   const login = async (emailOrUserObject, passwordOrToken) => {
     setLoading(true);
 
@@ -92,9 +85,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /* ------------------------------------
-                REGISTER
-  --------------------------------------*/
+                // REGISTER
   const register = async (name, email, password) => {
     setLoading(true);
 
@@ -120,9 +111,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /* ------------------------------------
-                LOGOUT
-  --------------------------------------*/
+                // LOGOUT
   const logout = () => {
     setUser(null);
     setToken(null);
