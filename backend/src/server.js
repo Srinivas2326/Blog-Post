@@ -15,16 +15,16 @@ dotenv.config();
 const app = express();
 
 /* ==============================================
-   ALLOWED ORIGINS
+   ALLOWED ORIGINS (Dynamic for Deployment)
 ============================================== */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://blog-post-iota-eosin.vercel.app",
-  "https://blog-post-5elh.onrender.com"
-];
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ||
+  "http://localhost:5173"
+)
+  .split(",")
+  .map((o) => o.trim());
 
 /* ==============================================
-   MAIN CORS CONFIG
+   CORS CONFIG
 ============================================== */
 app.use(
   cors({
@@ -36,35 +36,8 @@ app.use(
       return callback(new Error("CORS blocked: " + origin));
     },
     credentials: true,
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-/* ==============================================
-   MANUAL CORS HEADERS
-============================================== */
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
-
-  if (req.method === "OPTIONS") return res.sendStatus(200);
-
-  next();
-});
 
 /* ==============================================
    MIDDLEWARE
@@ -96,6 +69,4 @@ connectDB()
   });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

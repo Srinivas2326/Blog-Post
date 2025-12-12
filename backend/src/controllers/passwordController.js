@@ -2,7 +2,9 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 
-// 📌 SEND PASSWORD RESET EMAIL
+/* ==============================================
+   SEND PASSWORD RESET EMAIL
+============================================== */
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -13,21 +15,25 @@ exports.forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "No user found with that email" });
     }
 
-    // Generate token
+    // Generate reset token
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    // 🔥 Updated to Vercel URL instead of localhost
-    const resetURL = `https://blog-post-iota-eosin.vercel.app/reset-password/${resetToken}`;
+
+    const FRONTEND_URL =
+      process.env.FRONTEND_URL || "http://localhost:5173";
+
+    const resetURL = `${FRONTEND_URL}/reset-password/${resetToken}`;
 
     const message = `
       You requested a password reset.
       Click the link below to reset your password:
       ${resetURL}
-      
-      If you did not request this, ignore this email.
+
+      If you did not request this, please ignore this email.
     `;
 
+    // Send email
     await sendEmail({
       email: user.email,
       subject: "Password Reset Request",
@@ -35,13 +41,15 @@ exports.forgotPassword = async (req, res) => {
     });
 
     res.json({ message: "Reset email sent successfully" });
-
   } catch (error) {
     console.error("Email sending failed:", error);
 
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    await user.save({ validateBeforeSave: false });
+    // Reset token fields if email fails
+    if (user) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+    }
 
     res.status(500).json({
       message: "Email could not be sent",
@@ -50,7 +58,9 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// 📌 RESET PASSWORD USING TOKEN
+/* ==============================================
+   RESET PASSWORD USING TOKEN
+============================================== */
 exports.resetPassword = async (req, res) => {
   try {
     const hashedToken = crypto
@@ -67,6 +77,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
+    // Set new password
     user.password = req.body.password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
