@@ -1,50 +1,127 @@
-.app-root { min-height:100vh; }
+/* ==========================================================
+   APP LAYOUT STRUCTURE
+========================================================== */
 
-/* NAVBAR */
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: 40px;
+}
+
+/* ==========================================================
+   NAVBAR (Glass + spacing fix)
+========================================================== */
+
 .navbar {
-  height: 68px;
-  padding: 0 24px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 1.8rem;
+  backdrop-filter: blur(18px);
+
   background: var(--glass);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  transition: background 0.4s ease, border-color 0.4s ease;
 }
 
 .nav-logo {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--accent);
   text-decoration: none;
 }
 
+/* RIGHT SIDE NAV LINKS */
 .nav-right {
-  display:flex;
-  align-items:center;
-  gap: 16px;
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
 }
 
 .nav-link {
-  color: var(--muted);
-  text-decoration:none;
-  padding: 6px 10px;
-  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  transition: 0.25s;
 }
 
 .nav-link:hover {
-  background: rgba(255,255,255,0.1);
+  opacity: 1;
+  color: var(--accent);
 }
 
-/* PAGE CONTAINER */
+/* ==========================================================
+   PAGE CONTAINERS
+========================================================== */
+
 .page-container {
   max-width: 1100px;
-  margin: 30px auto;
-  padding: 0 20px;
+  margin: 2rem auto;
+  padding: 0 1rem;
 }
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.4rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+/* ==========================================================
+   POST GRID (2-COLUMN)
+========================================================== */
 
 .post-list {
   display: grid;
-  grid-template-columns: repeat(2,1fr);
-  gap: 22px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 780px) {
+  .post-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================
+   POST ITEM
+========================================================== */
+
+.post-item h2,
+.post-item h4 {
+  margin: 0 0 6px 0;
+}
+
+/* Spacing inside post */
+.post-item p {
+  margin: 6px 0;
+}
+
+.read-more-btn {
+  margin-top: 10px;
+}
+
+/* Author name text */
+.post-author {
+  font-size: 0.85rem;
+  color: var(--muted);
 }

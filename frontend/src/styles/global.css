@@ -1,101 +1,180 @@
-/* LIGHT THEME (default) */
+/* ==========================================================
+   LIGHT THEME (default)
+   Cyber Glassmorphism – Pastel + Soft Glow
+========================================================== */
 :root {
   --bg: #eef2ff;
   --bg2: #f8f9ff;
 
-  --glass: rgba(255,255,255,0.55);
-  --border: rgba(255,255,255,0.35);
+  --glass: rgba(255, 255, 255, 0.55);
+  --border: rgba(255, 255, 255, 0.35);
 
-  --accent: #7c3aed;
-  --accent2: #6366f1;
+  --accent: #7c3aed;    /* Purple */
+  --accent2: #6366f1;   /* Indigo */
 
   --text: #0b1220;
   --muted: #6b7280;
 
-  --card-bg: rgba(255,255,255,0.65);
+  --card-bg: rgba(255, 255, 255, 0.65);
 }
 
-/* CYBER DARK MODE */
-html[data-theme='dark'] {
-  --bg: #0a0a1a;
-  --bg2: #0f0f24;
 
-  --glass: rgba(18,18,45,0.55);
-  --border: rgba(146,77,255,0.28);
+/* ==========================================================
+   CYBER DARK MODE (neon purple glow)
+========================================================== */
+html[data-theme="dark"] {
+  --bg: #060614;
+  --bg2: #0b0b1f;
 
-  --accent: #b388ff;
-  --accent2: #7c3aed;
+  --glass: rgba(18, 18, 45, 0.45);
+  --border: rgba(146, 77, 255, 0.35);
 
-  --text: #e6ddff;
-  --muted: #a39cbf;
+  --accent: #c59aff;
+  --accent2: #8b5cf6;
 
-  --card-bg: rgba(22,22,50,0.75);
+  --text: #e8ddff;
+  --muted: #9c93bf;
+
+  --card-bg: rgba(20, 20, 45, 0.6);
 }
 
+
+/* ==========================================================
+   GLOBAL BODY
+========================================================== */
 body {
   margin: 0;
   background: radial-gradient(circle at top left, var(--bg), var(--bg2));
   color: var(--text);
-  font-family: Inter, sans-serif;
+  font-family: "Inter", sans-serif;
   transition: background 0.4s ease, color 0.4s ease;
 }
 
-/* GLASS CARD */
+
+/* ==========================================================
+   GLASS CARD
+========================================================== */
 .card {
   background: var(--card-bg);
-  padding: 1.4rem;
-  border-radius: 16px;
+  border-radius: 18px;
+  padding: 1.6rem;
   border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-  transition: background 0.4s ease, border-color 0.4s ease;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s;
 }
 
-/* POST CARD */
+
+/* ==========================================================
+   POST CARD
+========================================================== */
 .post-item {
   background: var(--card-bg);
-  border-radius: 14px;
-  border: 1px solid var(--border);
   padding: 20px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
   transition: 0.35s ease;
 }
 
 .post-item:hover {
   transform: translateY(-6px);
-  box-shadow: 0 20px 50px rgba(124,58,237,0.25);
+  box-shadow: 0 22px 55px rgba(124, 58, 237, 0.35);
 }
 
-/* Buttons */
+
+/* ==========================================================
+   INPUTS — Rounded Glass Neon Glow
+========================================================== */
+input,
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  color: var(--text);
+  font-size: 0.95rem;
+  transition: 0.25s ease;
+  outline: none;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea {
+  background: rgba(20, 20, 45, 0.55);
+  border-color: rgba(162, 110, 255, 0.45);
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(120, 65, 255, 0.55);
+}
+
+textarea {
+  resize: vertical;
+}
+
+
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
 .btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: white;
+  padding: 0.65rem 1.4rem;
   border-radius: 999px;
-  padding: 0.6rem 1.3rem;
   border: none;
-  cursor:pointer;
+  outline: none;
+  color: #ffffff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(140, 90, 255, 0.45);
 }
 
 .btn-outline {
   background: transparent;
   border: 1px solid var(--border);
-  color: var(--text);
+  padding: 0.6rem 1.2rem;
   border-radius: 999px;
-  padding: 0.5rem 1rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: 0.25s ease;
 }
 
-/* THEME BUTTON */
+.btn-outline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+
+/* ==========================================================
+   THEME TOGGLE BUTTON
+========================================================== */
 .theme-btn {
   background: transparent;
   border: none;
   font-size: 1.4rem;
   cursor: pointer;
-  transition: transform 0.2s;
+  padding: 6px;
+  transition: transform 0.2s ease;
 }
 
 .theme-btn:hover {
   transform: scale(1.2);
 }
 
-.muted { color: var(--muted); }
+
+/* ==========================================================
+   TEXT HELPERS
+========================================================== */
+.muted {
+  color: var(--muted);
+}
