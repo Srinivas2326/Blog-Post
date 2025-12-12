@@ -19,33 +19,20 @@ export default function Navbar() {
       </div>
 
       <div className="nav-right">
+        <Link to="/all-posts" className="nav-link">All Posts</Link>
+
         {isAuthenticated ? (
           <>
             <span className="nav-user">Hi, {user?.name}</span>
 
-            <Link to="/all-posts" className="nav-link">
-              All Posts
-            </Link>
+            <Link to={`/user/${user?._id}`} className="nav-link">Profile</Link>
+            <Link to="/dashboard" className="nav-link">Dashboard</Link>
 
-            {/* ALWAYS use normalized user._id */}
-            <Link to={`/user/${user?._id}`} className="nav-link">
-              Profile
-            </Link>
-
-            <Link to="/dashboard" className="nav-link">
-              Dashboard
-            </Link>
-
-            <button className="btn btn-outline" onClick={handleLogout}>
-              Logout
-            </button>
+            <button className="btn btn-outline" onClick={handleLogout}>Logout</button>
           </>
         ) : (
           <>
-            <Link to="/all-posts" className="nav-link">All Posts</Link>
-
             <Link to="/login" className="nav-link">Login</Link>
-
             <Link to="/register" className="btn btn-primary">Sign Up</Link>
           </>
         )}
