@@ -11,12 +11,10 @@ exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Check if email exists already
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "Email already exists" });
 
-    // Create new user
     const user = await User.create({
       name,
       email,
@@ -47,34 +45,25 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Fetch user with password
     let user = await User.findOne({ email }).select("+password");
 
     if (!user)
-      return res
-        .status(400)
-        .json({ message: "Invalid email or password" });
+      return res.status(400).json({ message: "Invalid email or password" });
 
-    // Google users cannot login via password
     if (!user.password) {
       return res.status(400).json({
-        message:
-          "This account uses Google login only. Please continue with Google.",
+        message: "This account uses Google login only. Please continue with Google.",
       });
     }
 
-    // Compare password
     const isMatch = await user.matchPassword(password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid email or password" });
 
-    // Generate Tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-
     const isProd = process.env.NODE_ENV === "production";
 
-    // Store refresh token in cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd,
@@ -108,22 +97,23 @@ exports.googleAuthUser = async (req, res) => {
 
     console.log("📥 Google Login Payload:", req.body);
 
-    if (!email || !googleId) {
-      console.log("❌ Missing fields in Google Login");
+    if (!email || !googleId)
       return res.status(400).json({ message: "Invalid Google auth data" });
-    }
 
     let user = await User.findOne({ email }).select("+password");
 
     if (user) {
       console.log("👤 Existing user found");
 
-      // If user is email/pass account converting → Google login
+      // Convert normal user → Google login
       if (!user.googleId) {
         console.log("🔄 Converting Password user → Google login");
+
         user.googleId = googleId;
         user.password = undefined;
-        await user.save();
+
+        // ⛔ IMPORTANT FIX
+        await user.save({ validateBeforeSave: false });
       }
     } else {
       console.log("🆕 Creating NEW Google user");
@@ -132,7 +122,7 @@ exports.googleAuthUser = async (req, res) => {
         name,
         email,
         googleId,
-        password: undefined,
+        password: undefined, // prevent validation
         role: "author",
       });
     }
@@ -149,6 +139,7 @@ exports.googleAuthUser = async (req, res) => {
     });
 
     console.log("✅ Google Login Success");
+
     return res.status(200).json({
       message: "Google login successful",
       accessToken,
