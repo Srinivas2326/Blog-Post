@@ -1,6 +1,4 @@
-/* =======================================================
-   AUTH PAGE CONTAINER (centers login/register UI)
-======================================================= */
+
 .auth-page {
   min-height: 90vh;
   display: flex;
@@ -9,9 +7,7 @@
   padding: 2rem;
 }
 
-/* =======================================================
-   AUTH CARD — Glass Transparent Style
-======================================================= */
+   /* AUTH CARD — Glass Transparent Style */
 .auth-card {
   width: 100%;
   max-width: 420px;
@@ -34,9 +30,7 @@ html[data-theme="dark"] .auth-card {
 }
 
 
-/* =======================================================
-   AUTH INPUT FIELDS (transparent, centered)
-======================================================= */
+   /* AUTH INPUT FIELDS */
 .auth-form .field {
   margin-bottom: 1rem;
 }
@@ -55,7 +49,7 @@ html[data-theme="dark"] .auth-card {
   border-radius: 14px;
   border: 1px solid var(--border);
 
-  background: rgba(255, 255, 255, 0.45); /* transparent */
+  background: rgba(255, 255, 255, 0.45); 
   backdrop-filter: blur(10px);
 
   color: var(--text);
@@ -76,9 +70,7 @@ html[data-theme="dark"] .auth-form input {
 }
 
 
-/* =======================================================
-   BUTTONS
-======================================================= */
+   /* BUTTONS */
 .auth-card .btn-primary {
   width: 100%;
   margin-top: 10px;
@@ -87,9 +79,7 @@ html[data-theme="dark"] .auth-form input {
 }
 
 
-/* =======================================================
-   GOOGLE BUTTON
-======================================================= */
+   /* GOOGLE BUTTON */
 .google-btn {
   display: flex;
   align-items: center;
@@ -112,9 +102,7 @@ html[data-theme="dark"] .auth-form input {
 }
 
 
-/* =======================================================
-   TEXT HELPERS
-======================================================= */
+   /* TEXT HELPERS */
 .auth-subtitle {
   margin-top: -10px;
   margin-bottom: 1.2rem;
