@@ -8,8 +8,8 @@
   --glass: rgba(255, 255, 255, 0.55);
   --border: rgba(255, 255, 255, 0.35);
 
-  --accent: #7c3aed;   /* Purple */
-  --accent2: #6366f1;  /* Indigo */
+  --accent: #7c3aed;
+  --accent2: #6366f1;
 
   --text: #0b1220;
   --muted: #6b7280;
@@ -19,22 +19,22 @@
 
 
 /* ==========================================================
-   CYBER DARK MODE — Neon Purple Glow
+   CYBER DARK MODE — Polished Neon Purple
 ========================================================== */
 html[data-theme="dark"] {
-  --bg: #060614;
-  --bg2: #0b0b1f;
+  --bg: #0f0f25;
+  --bg2: #1a1a3a;
 
-  --glass: rgba(18, 18, 45, 0.45);
-  --border: rgba(146, 77, 255, 0.35);
+  --glass: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.18);
 
-  --accent: #c59aff;
+  --accent: #a379ff;
   --accent2: #8b5cf6;
 
-  --text: #e8ddff;
-  --muted: #9c93bf;
+  --text: #f1eaff;
+  --muted: #b8aed8;
 
-  --card-bg: rgba(20, 20, 45, 0.6);
+  --card-bg: rgba(255, 255, 255, 0.10);
 }
 
 
@@ -60,12 +60,17 @@ body {
   border: 1px solid var(--border);
   backdrop-filter: blur(14px);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s;
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+html[data-theme="dark"] .card {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 
 /* ==========================================================
-   POST CARD
+   POST CARD (Home + Dashboard + Profile)
 ========================================================== */
 .post-item {
   background: var(--card-bg);
@@ -80,6 +85,10 @@ body {
 .post-item:hover {
   transform: translateY(-6px);
   box-shadow: 0 22px 55px rgba(124, 58, 237, 0.35);
+}
+
+html[data-theme="dark"] .post-item {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 
@@ -102,14 +111,15 @@ textarea {
 
 html[data-theme="dark"] input,
 html[data-theme="dark"] textarea {
-  background: rgba(20, 20, 45, 0.55);
-  border-color: rgba(162, 110, 255, 0.45);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text);
 }
 
 input:focus,
 textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 8px rgba(120, 65, 255, 0.55);
+  box-shadow: 0 0 10px rgba(120, 65, 255, 0.55);
 }
 
 textarea {
@@ -118,7 +128,7 @@ textarea {
 
 
 /* ==========================================================
-   BUTTONS — Primary, Outline, Danger
+   BUTTONS — Primary, Outline, Danger/Delete
 ========================================================== */
 
 /* Primary */
@@ -168,16 +178,16 @@ textarea {
   transition: 0.25s ease;
 }
 
-html[data-theme="dark"] .btn-danger {
-  background: rgba(255, 80, 80, 0.12);
-  border: 1px solid rgba(255, 100, 100, 0.45);
-  color: #ff8a8a;
-}
-
 .btn-danger:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 12px rgba(255, 80, 80, 0.55);
   background: rgba(255, 80, 80, 0.25);
+}
+
+html[data-theme="dark"] .btn-danger {
+  background: rgba(255, 80, 80, 0.10);
+  border-color: rgba(255, 120, 120, 0.35);
+  color: #ff8a8a;
 }
 
 
