@@ -27,8 +27,8 @@ app.use(
 );
   //  ⭐ FIXED CORS SETTINGS (LOCAL + FRONTEND DEPLOY)
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://your-frontend-domain.netlify.app"
+  "https://blog-post-5elh.onrender.com",
+  "https://blog-post-iota-eosin.vercel.app/"
 ];
 
 app.use(
