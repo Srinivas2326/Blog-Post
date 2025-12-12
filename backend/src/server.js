@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -14,30 +15,41 @@ const passwordRoutes = require("./routes/passwordRoutes");
 dotenv.config();
 const app = express();
 
+/* ---------------------------
+   TRUST PROXY (important for secure cookies behind proxies)
+   --------------------------- */
+app.set("trust proxy", 1);
+
 /* ==============================================
    ALLOWED ORIGINS (Dynamic for Deployment)
+   Provide ALLOWED_ORIGINS in your environment, comma-separated
 ============================================== */
-const allowedOrigins = (process.env.ALLOWED_ORIGINS ||
-  "http://localhost:5173"
-)
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
   .split(",")
   .map((o) => o.trim());
 
 /* ==============================================
-   CORS CONFIG
+   CORS CONFIG (explicit)
 ============================================== */
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      console.log("❌ Blocked by CORS:", origin);
-      return callback(new Error("CORS blocked: " + origin));
-    },
-    credentials: true,
-  })
-);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin || "");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+    return next();
+  } else {
+    console.log("❌ Blocked by CORS:", origin);
+    return res.status(403).json({ message: "CORS blocked: " + origin });
+  }
+});
 
 /* ==============================================
    MIDDLEWARE
