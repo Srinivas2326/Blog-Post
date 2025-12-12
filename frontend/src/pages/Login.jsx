@@ -43,11 +43,11 @@ export default function Login() {
     setGoogleLoading(true);
 
     try {
-      // Firebase Google Popup
+      // Firebase popup login
       const result = await signInWithPopup(auth, googleProvider);
       const googleUser = result.user;
 
-      // Send Google data to backend
+      // Send data to backend
       const res = await API.post("/auth/google", {
         name: googleUser.displayName,
         email: googleUser.email,
@@ -56,12 +56,17 @@ export default function Login() {
 
       const { accessToken, user } = res.data;
 
-      // Store session
+      // Store in localStorage
       localStorage.setItem("blog_user", JSON.stringify(user));
       localStorage.setItem("blog_token", accessToken);
       localStorage.setItem("blog_userId", user._id);
 
+      // ⭐ Update AuthContext immediately
+      login(user, accessToken);
+
+      // Redirect
       navigate("/dashboard");
+
     } catch (err) {
       console.error("GOOGLE LOGIN ERROR:", err);
 
@@ -115,7 +120,6 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Divider */}
         <div style={{ textAlign: "center", margin: "15px 0", color: "#888" }}>
           — or —
         </div>

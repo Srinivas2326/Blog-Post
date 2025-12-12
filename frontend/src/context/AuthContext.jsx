@@ -39,18 +39,36 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /* ------------------------------------
-                LOGIN
+       MAIN LOGIN FUNCTION (DUAL MODE)
+       MODE 1 → login(email, password)
+       MODE 2 → login(userObject, token)  ← For Google OAuth
   --------------------------------------*/
-  const login = async (email, password) => {
+  const login = async (emailOrUserObject, passwordOrToken) => {
     setLoading(true);
+
     try {
+      // 🔹 MODE 2: Google login (direct entry)
+      if (typeof emailOrUserObject === "object" && passwordOrToken) {
+        const userData = emailOrUserObject;
+        const accessToken = passwordOrToken;
+
+        setUser(userData);
+        setToken(accessToken);
+
+        localStorage.setItem("blog_user", JSON.stringify(userData));
+        localStorage.setItem("blog_token", accessToken);
+        localStorage.setItem("blog_userId", userData._id);
+
+        return { success: true };
+      }
+
+      // 🔹 MODE 1: Email/password login
+      const email = emailOrUserObject;
+      const password = passwordOrToken;
+
       const res = await API.post("/auth/login", { email, password });
 
       const { accessToken, user: userData } = res.data;
-
-      if (!accessToken || !userData) {
-        return { success: false, message: "Invalid server response" };
-      }
 
       const fixedUser = { ...userData, _id: userData._id || userData.id };
 
@@ -64,6 +82,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (err) {
       console.error("LOGIN ERROR:", err);
+
       return {
         success: false,
         message: err.response?.data?.message || "Login failed",
@@ -74,7 +93,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /* ------------------------------------
-                REGISTER (FIXED)
+                REGISTER
   --------------------------------------*/
   const register = async (name, email, password) => {
     setLoading(true);
@@ -82,7 +101,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await API.post("/auth/register", { name, email, password });
 
-      // Back-end only returns a message, not tokens
       if (res.data?.message) {
         return { success: true };
       }
