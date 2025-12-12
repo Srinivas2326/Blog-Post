@@ -2,22 +2,28 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+// Auth Pages
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 
-import Dashboard from "./pages/Dashboard";
-import CreatePost from "./pages/CreatePost";
-import EditPost from "./pages/EditPost";
+// Dashboard + Post Pages
+import Dashboard from "./pages/Dashboard.jsx";
+import CreatePost from "./pages/CreatePost.jsx";
+import EditPost from "./pages/EditPost.jsx";
 
-import AllPosts from "./pages/AllPosts";
-import PostDetails from "./pages/PostDetails";
-import UserProfile from "./pages/UserProfile";
-import EditProfile from "./pages/EditProfile";
-import ChangePassword from "./pages/ChangePassword";
+// Public Blog Pages
+import AllPosts from "./pages/AllPosts.jsx";
+import PostDetails from "./pages/PostDetails.jsx";
+import UserProfile from "./pages/UserProfile.jsx";
 
-import NotFound from "./pages/NotFound";
+// User Settings
+import EditProfile from "./pages/EditProfile.jsx";
+import ChangePassword from "./pages/ChangePassword.jsx";
+
+// Misc
+import NotFound from "./pages/NotFound.jsx";
 
 export default function App() {
   return (
@@ -26,7 +32,6 @@ export default function App() {
 
       <main className="main-content">
         <Routes>
-
           {/* Public Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
