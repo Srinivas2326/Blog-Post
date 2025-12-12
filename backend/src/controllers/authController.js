@@ -47,12 +47,15 @@ exports.loginUser = async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    // Cookie flags
+    const isProd = process.env.NODE_ENV === "production";
+
     // Store refresh token in HTTP-only cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, // set true in production
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: isProd,           // true in production (HTTPS)
+      sameSite: "none",        // allow cross-site cookie
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.json({

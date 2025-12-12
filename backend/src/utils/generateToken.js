@@ -1,6 +1,6 @@
+// backend/src/utils/generateToken.js
 const jwt = require("jsonwebtoken");
 
-// Access Token (short expiry)
 const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
@@ -9,7 +9,6 @@ const generateAccessToken = (user) => {
   );
 };
 
-// Refresh Token (long expiry)
 const generateRefreshToken = (user) => {
   return jwt.sign(
     { id: user._id },

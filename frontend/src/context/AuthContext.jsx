@@ -6,7 +6,7 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   /* ---------------------------------------------
-     LOAD USER + TOKEN FROM LOCAL STORAGE
+     STATE: USER + TOKEN + LOADING
   ---------------------------------------------- */
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem("blog_user");
@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
 
   /* ---------------------------------------------
-     SYNC TOKEN + USER WHEN LOCALSTORAGE CHANGES
+     AUTO LOAD FROM LOCAL STORAGE ON REFRESH
   ---------------------------------------------- */
   useEffect(() => {
     const storedUser = localStorage.getItem("blog_user");
@@ -28,25 +28,50 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /* ---------------------------------------------
+     🔥 OPTIONAL: AUTO LOGIN USING REFRESH TOKEN
+     (Only works if backend implements /auth/refresh)
+  ---------------------------------------------- */
+  useEffect(() => {
+    const tryRefresh = async () => {
+      try {
+        const res = await API.get("/auth/refresh");
+        if (res.data?.accessToken) {
+          localStorage.setItem("blog_token", res.data.accessToken);
+          setToken(res.data.accessToken);
+        }
+        if (res.data?.user) {
+          setUser(res.data.user);
+          localStorage.setItem("blog_user", JSON.stringify(res.data.user));
+        }
+      } catch (err) {
+        console.log("No refresh token available");
+      }
+    };
+
+    if (!token) tryRefresh();
+  }, [token]);
+
+  /* ---------------------------------------------
      LOGIN
   ---------------------------------------------- */
   const login = async (email, password) => {
     setLoading(true);
-
     try {
       const res = await API.post("/auth/login", { email, password });
+
       const { accessToken, user } = res.data;
 
-      const fixedUser = {
-        ...user,
-        _id: user._id || user.id,
-      };
+      if (!accessToken || !user) {
+        return { success: false, message: "Invalid server response" };
+      }
 
-      // Save to React State
+      const fixedUser = { ...user, _id: user._id || user.id };
+
+      // Save to state
       setUser(fixedUser);
       setToken(accessToken);
 
-      // Save to Storage
+      // Save to local storage
       localStorage.setItem("blog_user", JSON.stringify(fixedUser));
       localStorage.setItem("blog_token", accessToken);
       localStorage.setItem("blog_userId", fixedUser._id);
@@ -55,11 +80,11 @@ export const AuthProvider = ({ children }) => {
 
     } catch (err) {
       console.error("LOGIN ERROR:", err);
+
       return {
         success: false,
         message: err.response?.data?.message || "Login failed",
       };
-
     } finally {
       setLoading(false);
     }
@@ -70,34 +95,35 @@ export const AuthProvider = ({ children }) => {
   ---------------------------------------------- */
   const register = async (name, email, password) => {
     setLoading(true);
-
     try {
-      const res = await API.post("/auth/register", { name, email, password });
-      const { accessToken, user } = res.data;
+      const res = await API.post("/auth/register", {
+        name,
+        email,
+        password,
+      });
+
+      // Some backends return token directly after register
+      const { accessToken, user } = res.data || {};
 
       if (accessToken && user) {
-        const fixedUser = {
-          ...user,
-          _id: user._id || user.id,
-        };
+        const fixedUser = { ...user, _id: user._id || user.id };
 
         setUser(fixedUser);
         setToken(accessToken);
 
         localStorage.setItem("blog_user", JSON.stringify(fixedUser));
         localStorage.setItem("blog_token", accessToken);
-        localStorage.setItem("blog_userId", fixedUser._id);
       }
 
       return { success: true };
 
     } catch (err) {
       console.error("REGISTER ERROR:", err);
+
       return {
         success: false,
         message: err.response?.data?.message || "Registration failed",
       };
-
     } finally {
       setLoading(false);
     }
@@ -113,6 +139,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("blog_user");
     localStorage.removeItem("blog_token");
     localStorage.removeItem("blog_userId");
+
+    // Optional: tell backend to clear refresh cookie
+    try {
+      API.post("/auth/logout");
+    } catch {}
   };
 
   /* ---------------------------------------------
@@ -120,7 +151,7 @@ export const AuthProvider = ({ children }) => {
   ---------------------------------------------- */
   const value = {
     user,
-    setUser, // IMPORTANT for /edit-profile updates
+    setUser,
     token,
     loading,
     login,
