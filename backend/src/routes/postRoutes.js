@@ -6,9 +6,9 @@ const {
   createPost,
   getAllPosts,
   getPostById,
+  getMyPosts,
   updatePost,
   deletePost,
-  getMyPosts
 } = require("../controllers/postController");
 
 const router = express.Router();
@@ -17,16 +17,11 @@ const router = express.Router();
 router.get("/", getAllPosts);
 router.get("/:id", getPostById);
 
-// ⭐ PROTECTED → GET ONLY LOGGED-IN USER POSTS
-router.get("/mine", protect, getMyPosts);
+// PROTECTED ROUTES
+router.get("/mine", protect, getMyPosts); // <-- IMPORTANT
 
-// CREATE POST
 router.post("/", protect, authorizeRoles("author", "admin"), createPost);
-
-// UPDATE POST
 router.put("/:id", protect, updatePost);
-
-// DELETE POST
 router.delete("/:id", protect, deletePost);
 
 module.exports = router;

@@ -11,35 +11,26 @@ export default function Dashboard() {
   useEffect(() => {
     if (!token || !user) return;
 
-    const fetchMyPosts = async () => {
+    const load = async () => {
       try {
-        const res = await API.get("/posts/mine", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        console.log("My Posts:", res.data);
+        const res = await API.get("/posts/mine");
         setPosts(res.data);
-
-      } catch (error) {
-        console.error("Error fetching user posts:", error);
+      } catch (err) {
+        console.error("Error loading posts:", err);
       }
     };
 
-    fetchMyPosts();
+    load();
   }, [token, user]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    if (!window.confirm("Delete this post?")) return;
 
     try {
-      await API.delete(`/posts/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
+      await API.delete(`/posts/${id}`);
       setPosts((prev) => prev.filter((p) => p._id !== id));
-    } catch (error) {
-      console.error("Delete error:", error);
-      alert("You cannot delete this post");
+    } catch (err) {
+      alert("Could not delete post");
     }
   };
 
@@ -51,9 +42,7 @@ export default function Dashboard() {
           <p className="muted">Welcome back, {user?.name}</p>
         </div>
 
-        <Link to="/create-post" className="btn btn-primary">
-          + New Post
-        </Link>
+        <Link to="/create-post" className="btn btn-primary">+ New Post</Link>
       </div>
 
       <div className="card">
@@ -66,15 +55,9 @@ export default function Dashboard() {
             {posts.map((post) => (
               <li key={post._id} className="post-item">
                 <h4>{post.title}</h4>
-                <p>{post.content?.slice(0, 120)}...</p>
+                <p>{post.content.slice(0, 140)}...</p>
 
-                <div
-                  style={{
-                    marginTop: "10px",
-                    display: "flex",
-                    gap: "10px"
-                  }}
-                >
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
                   <button
                     className="btn btn-outline"
                     onClick={() => navigate(`/edit-post/${post._id}`)}
