@@ -27,7 +27,7 @@ export default function Register() {
     const result = await register(form.name, form.email, form.password);
 
     if (result.success) {
-      setSuccess("Account created successfully! Redirecting to login...");
+      setSuccess("Account created successfully!");
       setTimeout(() => navigate("/login"), 1200);
     } else {
       setError(result.message);
