@@ -14,32 +14,35 @@ dotenv.config();
 const app = express();
 
 /* =====================================================
-   ⭐ ALLOWED ORIGINS (LOCAL + RENDER BACKEND + VERCEL FRONTEND)
+   ⭐ ALLOWED ORIGINS (ONLY YOUR FRONTEND + LOCAL)
 ===================================================== */
 const allowedOrigins = [
-  "http://localhost:5173",                        // Local frontend
-  "https://blog-post-iota-eosin.vercel.app",     // Your Vercel frontend
-  "https://blog-post-5elh.onrender.com"          // Your Render backend
+  "http://localhost:5173",
+  "https://blog-post-iota-eosin.vercel.app",   // your Vercel frontend
 ];
 
 /* =====================================================
-   ⭐ MAIN CORS MIDDLEWARE
+   ⭐ MAIN CORS (must run BEFORE manual headers)
 ===================================================== */
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // allow REST clients (Postman etc)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      console.log("❌ Blocked by CORS:", origin);
-      return callback(new Error("Not allowed by CORS: " + origin), false);
+
+      console.log("❌ CORS BLOCKED:", origin);
+      return callback(new Error("CORS not allowed: " + origin));
     },
     credentials: true,
   })
 );
 
 /* =====================================================
-   ⭐ MANUAL CORS HEADERS (REQUIRED FOR COOKIES + PREFLIGHT)
+   ⭐ MANUAL HEADERS (must run AFTER cors())
 ===================================================== */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -50,7 +53,10 @@ app.use((req, res, next) => {
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
@@ -78,19 +84,16 @@ app.use("/api/users", userRoutes);
    ⭐ HEALTH CHECK
 ===================================================== */
 app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    message: "Backend server is running 🚀",
-  });
+  res.json({ status: "ok", message: "Backend is running 🚀" });
 });
 
 /* =====================================================
-   ⭐ DATABASE CONNECTION
+   ⭐ DATABASE START
 ===================================================== */
 connectDB()
-  .then(() => console.log("✅ Database connected successfully"))
+  .then(() => console.log("✅ Database connected"))
   .catch((err) => {
-    console.error("❌ Database connection failed:", err);
+    console.error("❌ DB Error:", err);
     process.exit(1);
   });
 
@@ -98,7 +101,4 @@ connectDB()
    ⭐ START SERVER
 ===================================================== */
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log("🚀 Server running on port", PORT));
