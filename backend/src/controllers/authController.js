@@ -97,22 +97,19 @@ exports.googleAuthUser = async (req, res) => {
 
     console.log("📥 Google Login Payload:", req.body);
 
-    if (!email || !googleId)
+    if (!email || !googleId) {
       return res.status(400).json({ message: "Invalid Google auth data" });
+    }
 
     let user = await User.findOne({ email }).select("+password");
 
     if (user) {
-      console.log("👤 Existing user found");
-
-      // Convert normal user → Google login
+      // Convert existing email/password → Google account
       if (!user.googleId) {
         console.log("🔄 Converting Password user → Google login");
 
         user.googleId = googleId;
-        user.password = undefined;
-
-        // ⛔ IMPORTANT FIX
+        user.password = null; // IMPORTANT FIX
         await user.save({ validateBeforeSave: false });
       }
     } else {
@@ -122,11 +119,12 @@ exports.googleAuthUser = async (req, res) => {
         name,
         email,
         googleId,
-        password: undefined, // prevent validation
+        password: null, // IMPORTANT FIX
         role: "author",
       });
     }
 
+    // Generate Tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
     const isProd = process.env.NODE_ENV === "production";
@@ -139,7 +137,6 @@ exports.googleAuthUser = async (req, res) => {
     });
 
     console.log("✅ Google Login Success");
-
     return res.status(200).json({
       message: "Google login successful",
       accessToken,
