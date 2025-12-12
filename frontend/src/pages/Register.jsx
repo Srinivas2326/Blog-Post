@@ -11,7 +11,9 @@ export default function Register() {
     email: "",
     password: "",
   });
+
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -20,10 +22,13 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     const result = await register(form.name, form.email, form.password);
+
     if (result.success) {
-      navigate("/dashboard");
+      setSuccess("Account created successfully! Redirecting to login...");
+      setTimeout(() => navigate("/login"), 1200);
     } else {
       setError(result.message);
     }
@@ -33,9 +38,12 @@ export default function Register() {
     <div className="auth-page">
       <div className="auth-card">
         <h2>Create an account ✨</h2>
-        <p className="auth-subtitle">Start writing and managing blog posts.</p>
+        <p className="auth-subtitle">
+          Start writing and managing blog posts.
+        </p>
 
         {error && <div className="auth-error">{error}</div>}
+        {success && <div className="auth-success">{success}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="field">

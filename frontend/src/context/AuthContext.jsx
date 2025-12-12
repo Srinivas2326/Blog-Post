@@ -52,13 +52,11 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: "Invalid server response" };
       }
 
-      // Ensure user has _id property
       const fixedUser = { ...userData, _id: userData._id || userData.id };
 
       setUser(fixedUser);
       setToken(accessToken);
 
-      // Persist
       localStorage.setItem("blog_user", JSON.stringify(fixedUser));
       localStorage.setItem("blog_token", accessToken);
       localStorage.setItem("blog_userId", fixedUser._id);
@@ -76,30 +74,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   /* ------------------------------------
-                REGISTER
+                REGISTER (FIXED)
   --------------------------------------*/
   const register = async (name, email, password) => {
     setLoading(true);
+
     try {
       const res = await API.post("/auth/register", { name, email, password });
 
-      const { accessToken, user: userData } = res.data || {};
-
-      if (accessToken && userData) {
-        const fixedUser = { ...userData, _id: userData._id || userData.id };
-
-        setUser(fixedUser);
-        setToken(accessToken);
-
-        localStorage.setItem("blog_user", JSON.stringify(fixedUser));
-        localStorage.setItem("blog_token", accessToken);
-
+      // Back-end only returns a message, not tokens
+      if (res.data?.message) {
         return { success: true };
       }
 
       return {
         success: false,
-        message: "Invalid response from server",
+        message: "Unexpected response from server",
       };
     } catch (err) {
       console.error("REGISTER ERROR:", err);
@@ -123,13 +113,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("blog_token");
     localStorage.removeItem("blog_userId");
 
-    // call backend logout (ignore failures)
     API.post("/auth/logout").catch(() => {});
   };
 
-  /* ------------------------------------
-                EXPORT CONTEXT
-  --------------------------------------*/
   return (
     <AuthContext.Provider
       value={{
@@ -139,7 +125,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        setUser,           // <-- IMPORTANT: needed for EditProfile updates
+        setUser,
         isAuthenticated: !!token,
       }}
     >
