@@ -12,39 +12,35 @@ const passwordRoutes = require("./routes/passwordRoutes");
 
 dotenv.config();
 const app = express();
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("❌ Blocked by CORS:", origin);
-        callback(new Error("CORS blocked: " + origin));
-      }
-    },
-    credentials: true, // required for cookies
-  })
-);
-  //  ⭐ FIXED CORS SETTINGS (LOCAL + FRONTEND DEPLOY)
+
+/* =====================================================
+   ⭐ ALLOWED ORIGINS (LOCAL + RENDER BACKEND + VERCEL FRONTEND)
+===================================================== */
 const allowedOrigins = [
-  "https://blog-post-5elh.onrender.com",
-  "https://blog-post-iota-eosin.vercel.app/"
+  "http://localhost:5173",                        // Local frontend
+  "https://blog-post-iota-eosin.vercel.app",     // Your Vercel frontend
+  "https://blog-post-5elh.onrender.com"          // Your Render backend
 ];
 
+/* =====================================================
+   ⭐ MAIN CORS MIDDLEWARE
+===================================================== */
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS: " + origin));
+        return callback(null, true);
       }
+      console.log("❌ Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS: " + origin), false);
     },
     credentials: true,
   })
 );
 
-// 🔥 Manual CORS headers (Required for cookies + Render)
+/* =====================================================
+   ⭐ MANUAL CORS HEADERS (REQUIRED FOR COOKIES + PREFLIGHT)
+===================================================== */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
@@ -56,22 +52,31 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
   next();
 });
 
-
-  //  ⭐ MIDDLEWARE
+/* =====================================================
+   ⭐ MIDDLEWARE
+===================================================== */
 app.use(express.json());
 app.use(cookieParser());
 
-  //  ⭐ API ROUTES
+/* =====================================================
+   ⭐ API ROUTES
+===================================================== */
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 app.use("/api/protected", protectedRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
 
-  //  ⭐ HEALTH CHECK
+/* =====================================================
+   ⭐ HEALTH CHECK
+===================================================== */
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
@@ -79,7 +84,9 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-  //  ⭐ DATABASE CONNECTION
+/* =====================================================
+   ⭐ DATABASE CONNECTION
+===================================================== */
 connectDB()
   .then(() => console.log("✅ Database connected successfully"))
   .catch((err) => {
@@ -87,7 +94,9 @@ connectDB()
     process.exit(1);
   });
 
-  //  ⭐ START SERVER
+/* =====================================================
+   ⭐ START SERVER
+===================================================== */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>
