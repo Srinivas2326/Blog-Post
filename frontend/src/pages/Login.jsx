@@ -1,157 +1,142 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { API } from "../utils/api";
+const User = require("../models/User");
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../utils/generateToken");
 
-// Firebase imports
-import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "../firebase";
+/* ============================================================
+                      REGISTER
+============================================================ */
+exports.registerUser = async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
 
-export default function Login() {
-  const { login, loading } = useAuth();
-  const navigate = useNavigate();
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "Email already exists" });
 
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const [googleLoading, setGoogleLoading] = useState(false);
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: role || "author",
+    });
 
-  const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        role: user.role,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
-  /* --------------------------------------------------------
-        NORMAL EMAIL + PASSWORD LOGIN
-  ---------------------------------------------------------*/
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+/* ============================================================
+                      LOGIN (EMAIL + PASSWORD)
+============================================================ */
+exports.loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-    const result = await login(form.email, form.password);
+    let user = await User.findOne({ email });
+    if (!user)
+      return res.status(400).json({ message: "Invalid email or password" });
 
-    if (result.success) {
-      navigate("/dashboard");
+    // If user registered with Google, they cannot log in with password
+    if (!user.password)
+      return res.status(400).json({ message: "This account uses Google login. Please continue with Google." });
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid email or password" });
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    const isProd = process.env.NODE_ENV === "production";
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      message: "Login successful",
+      accessToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        role: user.role,
+        email: user.email,
+      },
+    });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+/* ============================================================
+                      GOOGLE AUTH LOGIN
+============================================================ */
+exports.googleAuthUser = async (req, res) => {
+  try {
+    const { email, name, googleId } = req.body;
+
+    if (!email || !googleId)
+      return res.status(400).json({ message: "Invalid Google auth data" });
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // Update googleId for existing user
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.password = null; // remove password login for safety
+        await user.save();
+      }
     } else {
-      setError(result.message);
-    }
-  };
-
-  /* --------------------------------------------------------
-                  GOOGLE LOGIN HANDLER
-  ---------------------------------------------------------*/
-  const handleGoogleLogin = async () => {
-    setError("");
-    setGoogleLoading(true);
-
-    try {
-      // Firebase popup login
-      const result = await signInWithPopup(auth, googleProvider);
-      const googleUser = result.user;
-
-      // Send profile to backend to create/login user
-      const res = await API.post("/auth/google", {
-        name: googleUser.displayName,
-        email: googleUser.email,
-        googleId: googleUser.uid,
+      // Create new Google account
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        password: null,
+        role: "author",
       });
-
-      const { accessToken, user } = res.data;
-
-      // Save session
-      localStorage.setItem("blog_user", JSON.stringify(user));
-      localStorage.setItem("blog_token", accessToken);
-      localStorage.setItem("blog_userId", user._id);
-
-      navigate("/dashboard");
-    } catch (err) {
-      console.error("GOOGLE LOGIN ERROR:", err);
-
-      let message =
-        err.response?.data?.message ||
-        err.message ||
-        "Google login failed";
-
-      setError(message);
     }
 
-    setGoogleLoading(false);
-  };
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    const isProd = process.env.NODE_ENV === "production";
 
-  return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h2>Welcome back 👋</h2>
-        <p className="auth-subtitle">Login to continue to your dashboard.</p>
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-        {error && <div className="auth-error">{error}</div>}
+    return res.status(200).json({
+      message: "Google login successful",
+      accessToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        role: user.role,
+        email: user.email,
+      },
+    });
 
-        {/* ------------------ FORM ------------------ */}
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="field">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div className="field">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <button
-            className="btn btn-primary full-width"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        {/* ------------------ OR DIVIDER ------------------ */}
-        <div style={{ textAlign: "center", margin: "15px 0", color: "#888" }}>
-          — or —
-        </div>
-
-        {/* ---------------- GOOGLE LOGIN BUTTON -------------- */}
-        <button
-          type="button"
-          className="btn btn-outline full-width"
-          onClick={handleGoogleLogin}
-          disabled={googleLoading}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-          }}
-        >
-          <img
-            src="https://developers.google.com/identity/images/g-logo.png"
-            alt="Google"
-            style={{ width: "18px", height: "18px" }}
-          />
-          {googleLoading ? "Connecting..." : "Continue with Google"}
-        </button>
-
-        {/* ------------------ LINKS ------------------ */}
-        <div className="auth-links">
-          <Link to="/forgot-password">Forgot password?</Link>
-          <span>
-            Don&apos;t have an account? <Link to="/register">Register</Link>
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Google login failed", error: error.message });
+  }
+};

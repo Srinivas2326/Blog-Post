@@ -47,9 +47,11 @@ exports.loginUser = async (req, res) => {
     if (!user)
       return res.status(400).json({ message: "Invalid email or password" });
 
-    // If user registered with Google, they cannot log in with password
+    // Google users cannot login with password
     if (!user.password)
-      return res.status(400).json({ message: "This account uses Google login. Please continue with Google." });
+      return res.status(400).json({
+        message: "This account uses Google login. Please continue with Google.",
+      });
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch)
@@ -95,14 +97,14 @@ exports.googleAuthUser = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      // Update googleId for existing user
+      // Convert existing email/password → Google login
       if (!user.googleId) {
         user.googleId = googleId;
-        user.password = null; // remove password login for safety
+        user.password = null; // disable password login
         await user.save();
       }
     } else {
-      // Create new Google account
+      // First-time Google login
       user = await User.create({
         name,
         email,
@@ -135,8 +137,9 @@ exports.googleAuthUser = async (req, res) => {
     });
 
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Google login failed", error: error.message });
+    return res.status(500).json({
+      message: "Google login failed",
+      error: error.message,
+    });
   }
 };
