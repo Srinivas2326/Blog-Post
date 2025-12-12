@@ -1,21 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { API } from "../utils/api";
+import PostCard from "../components/PostCard";
 
 export default function AllPosts() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const load = async () => {
       try {
         const res = await API.get("/posts");
         setPosts(res.data);
-      } catch (err) {
-        console.error("Error fetching posts", err);
+      } catch (e) {
+        console.log("Error loading posts", e);
       }
     };
-
-    fetchPosts();
+    load();
   }, []);
 
   return (
@@ -23,33 +22,13 @@ export default function AllPosts() {
       <h1>Latest Blogs</h1>
       <p className="muted">Explore blogs from all users</p>
 
-      <div className="card" style={{ marginTop: "20px" }}>
-        {posts.length === 0 ? (
-          <p className="muted">No posts available.</p>
-        ) : (
-          <ul className="post-list">
-            {posts.map((post) => (
-              <li key={post._id} className="post-item">
-                <h2>{post.title}</h2>
-
-                <p className="muted">
-                  By {post.author?.name} •{" "}
-                  {new Date(post.createdAt).toLocaleDateString()}
-                </p>
-                <p className="muted">Views: {post.viewCount}</p>
-
-                <p style={{ marginTop: "10px" }}>
-                  {post.content?.slice(0, 200)}...
-                </p>
-
-                <Link to={`/post/${post._id}`} className="btn btn-outline" style={{ marginTop: "12px" }}>
-                  Read More →
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ul className="post-list">
+        {posts.map((p) => (
+          <li key={p._id}>
+            <PostCard post={p} />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

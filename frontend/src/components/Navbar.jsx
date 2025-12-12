@@ -12,23 +12,21 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="nav-left">
-        <Link to="/all-posts" className="nav-logo">
-          BlogPost
-        </Link>
-      </div>
+      <Link to="/all-posts" className="nav-logo">BlogPost</Link>
 
       <div className="nav-right">
+
         <Link to="/all-posts" className="nav-link">All Posts</Link>
 
         {isAuthenticated ? (
           <>
-            <span className="nav-user">Hi, {user?.name}</span>
-
+            <span className="nav-link">Hi, {user?.name}</span>
             <Link to={`/user/${user?._id}`} className="nav-link">Profile</Link>
             <Link to="/dashboard" className="nav-link">Dashboard</Link>
 
-            <button className="btn btn-outline" onClick={handleLogout}>Logout</button>
+            <button onClick={handleLogout} className="btn btn-outline">
+              Logout
+            </button>
           </>
         ) : (
           <>
@@ -36,6 +34,7 @@ export default function Navbar() {
             <Link to="/register" className="btn btn-primary">Sign Up</Link>
           </>
         )}
+
       </div>
     </nav>
   );
