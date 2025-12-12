@@ -11,35 +11,25 @@ export default function Dashboard() {
   useEffect(() => {
     if (!token || !user) return;
 
-    const fetchPosts = async () => {
+    const fetchMyPosts = async () => {
       try {
-        const res = await API.get("/posts", {
+        const res = await API.get("/posts/mine", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        console.log("All posts from backend:", res.data);
-        console.log("Logged user:", user);
-
-        // The backend returns populated author object:
-        // { author: {_id, name, email} }
-        const filtered = res.data.filter(
-          (post) => post?.author?._id === user?._id
-        );
-
-        console.log("User posts:", filtered);
-
+        console.log("My Posts:", res.data);
         setPosts(res.data);
 
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.error("Error fetching user posts:", error);
       }
     };
-    
-    fetchPosts();
+
+    fetchMyPosts();
   }, [token, user]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure?")) return;
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
 
     try {
       await API.delete(`/posts/${id}`, {
@@ -78,7 +68,13 @@ export default function Dashboard() {
                 <h4>{post.title}</h4>
                 <p>{post.content?.slice(0, 120)}...</p>
 
-                <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+                <div
+                  style={{
+                    marginTop: "10px",
+                    display: "flex",
+                    gap: "10px"
+                  }}
+                >
                   <button
                     className="btn btn-outline"
                     onClick={() => navigate(`/edit-post/${post._id}`)}

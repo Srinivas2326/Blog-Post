@@ -1,7 +1,7 @@
 const Post = require("../models/Post");
 
 /* -----------------------------------------------------
-   CREATE POST  (Author / Admin)
+   CREATE POST (Author / Admin)
 ----------------------------------------------------- */
 exports.createPost = async (req, res) => {
   try {
@@ -12,7 +12,7 @@ exports.createPost = async (req, res) => {
       content,
       author: req.user._id,
       isPublished: true,
-      viewCount: 0, // ensure field exists
+      viewCount: 0,
     });
 
     res.status(201).json({
@@ -23,7 +23,6 @@ exports.createPost = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 /* -----------------------------------------------------
    GET ALL POSTS (Public)
@@ -40,13 +39,26 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
+/* -----------------------------------------------------
+   GET ONLY LOGGED-IN USER POSTS  ⭐
+----------------------------------------------------- */
+exports.getMyPosts = async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.user._id })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error("MY POSTS ERROR:", error);
+    res.status(500).json({ message: "Error fetching your posts" });
+  }
+};
 
 /* -----------------------------------------------------
    GET SINGLE POST + INCREMENT VIEW COUNT
 ----------------------------------------------------- */
 exports.getPostById = async (req, res) => {
   try {
-    // Increment view count safely
     await Post.findByIdAndUpdate(req.params.id, {
       $inc: { viewCount: 1 },
     });
@@ -64,7 +76,6 @@ exports.getPostById = async (req, res) => {
     res.status(500).json({ message: "Error fetching post" });
   }
 };
-
 
 /* -----------------------------------------------------
    UPDATE POST (Author Only)
@@ -95,9 +106,8 @@ exports.updatePost = async (req, res) => {
   }
 };
 
-
 /* -----------------------------------------------------
-   DELETE POST (Author or Admin)
+   DELETE POST (Author OR Admin)
 ----------------------------------------------------- */
 exports.deletePost = async (req, res) => {
   try {
@@ -107,14 +117,13 @@ exports.deletePost = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // Only Author OR Admin can delete
     if (
       post.author.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res
-        .status(403)
-        .json({ message: "You are not allowed to delete this post" });
+      return res.status(403).json({
+        message: "You are not allowed to delete this post",
+      });
     }
 
     await post.deleteOne();
