@@ -1,12 +1,8 @@
-// frontend/src/utils/api.js
 import axios from "axios";
 
-// Vite environment variable style: VITE_API_URL
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-
 export const API = axios.create({
-  baseURL: API_BASE,
-  withCredentials: true,  // required for cookies + refresh tokens
+  baseURL: "https://blog-post-5elh.onrender.com/api",
+  withCredentials: true, 
 });
 
 API.interceptors.request.use(
