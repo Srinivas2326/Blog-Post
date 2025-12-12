@@ -12,15 +12,6 @@ const passwordRoutes = require("./routes/passwordRoutes");
 
 dotenv.config();
 const app = express();
-
-/* =====================================================
-   ⭐ FIXED CORS SETTINGS (LOCAL + FRONTEND DEPLOY)
-===================================================== */
-const allowedOrigins = [
-  "http://localhost:5173",                    // local frontend
-  "https://your-frontend-domain.netlify.app"  // update after frontend deployment
-];
-
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -34,18 +25,42 @@ app.use(
     credentials: true, // required for cookies
   })
 );
+/* =====================================================
+   ⭐ FIXED CORS SETTINGS (LOCAL + FRONTEND DEPLOY)
+===================================================== */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://your-frontend-domain.netlify.app"
+];
 
-// Fix for Axios sending credentials
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS: " + origin));
+      }
+    },
+    credentials: true,
+  })
+);
+
+// 🔥 Manual CORS headers (Required for cookies + Render)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
+
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+
   next();
 });
+
 
 /* =====================================================
    ⭐ MIDDLEWARE
