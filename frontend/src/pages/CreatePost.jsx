@@ -7,10 +7,29 @@ export default function CreatePost() {
   const [form, setForm] = useState({ title: "", content: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+
+  // 🔒 BLOCK DEACTIVATED USERS AT UI LEVEL
+  if (user && user.isActive === false) {
+    return (
+      <div className="page-container">
+        <div className="card">
+          <h2>Create a new post</h2>
+          <p className="auth-error" style={{ marginTop: "1rem" }}>
+            ❌ Your account has been deactivated by admin.
+            <br />
+            You cannot create new posts.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -20,11 +39,17 @@ export default function CreatePost() {
     try {
       await API.post(
         "/posts",
-        { title: form.title, content: form.content },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          title: form.title,
+          content: form.content,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
+
       navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create post");
