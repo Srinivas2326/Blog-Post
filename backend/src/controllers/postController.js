@@ -1,7 +1,9 @@
 const Post = require("../models/Post");
 
 /* ======================================================
-   CREATE POST (Author / Admin)
+   CREATE POST
+   Author → Active only
+   Admin  → Always allowed
 ====================================================== */
 exports.createPost = async (req, res) => {
   try {
@@ -13,8 +15,8 @@ exports.createPost = async (req, res) => {
       });
     }
 
-    // ❌ Block inactive users
-    if (!req.user.isActive) {
+    // ❌ Block ONLY inactive authors (NOT admin)
+    if (!req.user.isActive && req.user.role !== "admin") {
       return res.status(403).json({
         message: "Your account is deactivated",
       });
@@ -28,12 +30,12 @@ exports.createPost = async (req, res) => {
       viewCount: 0,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Post created successfully",
       post,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error",
       error: error.message,
     });
@@ -41,7 +43,7 @@ exports.createPost = async (req, res) => {
 };
 
 /* ======================================================
-   GET MY POSTS (Author Dashboard)
+   GET MY POSTS
 ====================================================== */
 exports.getMyPosts = async (req, res) => {
   try {
@@ -49,17 +51,17 @@ exports.getMyPosts = async (req, res) => {
       author: req.user.id,
     }).sort({ createdAt: -1 });
 
-    res.json(posts);
+    return res.json(posts);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to load posts",
     });
   }
 };
 
 /* ======================================================
-   GET ALL POSTS (Public View)
-   ❗ Excludes posts from inactive users
+   GET ALL POSTS (Public)
+   ❗ Hide posts of inactive users
 ====================================================== */
 exports.getAllPosts = async (req, res) => {
   try {
@@ -67,18 +69,17 @@ exports.getAllPosts = async (req, res) => {
       .populate({
         path: "author",
         select: "_id name email role isActive",
-        match: { isActive: true }, // 🔥 hide inactive users
+        match: { isActive: true },
       })
       .sort({ createdAt: -1 });
 
-    // ❗ Remove posts whose authors are inactive
     const filteredPosts = posts.filter(
       (post) => post.author !== null
     );
 
-    res.json(filteredPosts);
+    return res.json(filteredPosts);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Could not fetch posts",
     });
   }
@@ -86,7 +87,6 @@ exports.getAllPosts = async (req, res) => {
 
 /* ======================================================
    GET POST BY ID
-   ❗ Blocks inactive author posts
 ====================================================== */
 exports.getPostById = async (req, res) => {
   try {
@@ -101,13 +101,12 @@ exports.getPostById = async (req, res) => {
       });
     }
 
-    // Increment view count
     post.viewCount += 1;
     await post.save();
 
-    res.json(post);
+    return res.json(post);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error fetching post",
     });
   }
@@ -115,8 +114,8 @@ exports.getPostById = async (req, res) => {
 
 /* ======================================================
    UPDATE POST
-   Author → Own post
-   Admin → Any post
+   Author → Own post (active only)
+   Admin  → Any post
 ====================================================== */
 exports.updatePost = async (req, res) => {
   try {
@@ -128,7 +127,6 @@ exports.updatePost = async (req, res) => {
       });
     }
 
-    // 🔐 Authorization
     if (
       post.author.toString() !== req.user.id &&
       req.user.role !== "admin"
@@ -143,12 +141,12 @@ exports.updatePost = async (req, res) => {
 
     const updatedPost = await post.save();
 
-    res.json({
+    return res.json({
       message: "Post updated successfully",
       post: updatedPost,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error",
       error: error.message,
     });
@@ -158,7 +156,7 @@ exports.updatePost = async (req, res) => {
 /* ======================================================
    DELETE POST
    Author → Own post
-   Admin → Any post
+   Admin  → Any post
 ====================================================== */
 exports.deletePost = async (req, res) => {
   try {
@@ -170,7 +168,6 @@ exports.deletePost = async (req, res) => {
       });
     }
 
-    // 🔐 Authorization
     if (
       post.author.toString() !== req.user.id &&
       req.user.role !== "admin"
@@ -182,11 +179,11 @@ exports.deletePost = async (req, res) => {
 
     await post.deleteOne();
 
-    res.json({
+    return res.json({
       message: "Post deleted successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error",
       error: error.message,
     });

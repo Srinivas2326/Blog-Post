@@ -19,24 +19,27 @@ router.use(protect, adminOnly);
 
 /**
  * GET ALL USERS (Admin)
- * 🔹 Only existing users (deleted users are gone forever)
+ * 🔹 Returns only users that exist in DB
  */
 router.get("/users", async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
   } catch (error) {
+    console.error("ADMIN GET USERS ERROR:", error);
     res.status(500).json({ message: "Failed to fetch users" });
   }
 });
 
 /**
- * 🔥 DELETE USER PERMANENTLY (DATABASE DELETE)
- * Admin cannot delete self
+ * 🔥 DELETE USER PERMANENTLY
+ * - Admin cannot delete self
+ * - Deletes user posts
+ * - Deletes user from DB
  */
 router.delete("/users/:id", async (req, res) => {
   try {
-    // ❌ Prevent admin deleting himself
+    // ❌ Prevent admin deleting self
     if (req.user.id === req.params.id) {
       return res.status(400).json({
         message: "Admin cannot delete their own account",
@@ -46,21 +49,25 @@ router.delete("/users/:id", async (req, res) => {
     const user = await User.findById(req.params.id);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        message: "User not found",
+      });
     }
 
-    // 🔥 DELETE ALL POSTS BY USER
+    // 🔥 Delete all posts by user
     await Post.deleteMany({ author: user._id });
 
-    // 🔥 DELETE USER FROM DATABASE
+    // 🔥 Delete user permanently
     await User.findByIdAndDelete(req.params.id);
 
-    res.json({
+    return res.json({
       message: "User permanently deleted from database",
     });
   } catch (error) {
     console.error("ADMIN DELETE USER ERROR:", error);
-    res.status(500).json({ message: "Failed to delete user" });
+    return res.status(500).json({
+      message: "Failed to delete user",
+    });
   }
 });
 
@@ -79,6 +86,7 @@ router.get("/posts", async (req, res) => {
 
     res.json(posts);
   } catch (error) {
+    console.error("ADMIN GET POSTS ERROR:", error);
     res.status(500).json({ message: "Failed to fetch posts" });
   }
 });
@@ -91,7 +99,9 @@ router.put("/posts/:id", async (req, res) => {
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
 
     post.title = req.body.title ?? post.title;
@@ -104,6 +114,7 @@ router.put("/posts/:id", async (req, res) => {
       post: updatedPost,
     });
   } catch (error) {
+    console.error("ADMIN UPDATE POST ERROR:", error);
     res.status(500).json({ message: "Failed to update post" });
   }
 });
@@ -116,13 +127,18 @@ router.delete("/posts/:id", async (req, res) => {
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
 
     await post.deleteOne();
 
-    res.json({ message: "Post deleted by admin" });
+    res.json({
+      message: "Post deleted by admin",
+    });
   } catch (error) {
+    console.error("ADMIN DELETE POST ERROR:", error);
     res.status(500).json({ message: "Failed to delete post" });
   }
 });
