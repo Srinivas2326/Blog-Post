@@ -1,5 +1,4 @@
 const Post = require("../models/Post");
-const User = require("../models/User");
 
 /* ======================================================
    CREATE POST (Author / Admin)
@@ -72,8 +71,10 @@ exports.getAllPosts = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    // Remove posts whose authors are inactive
-    const filteredPosts = posts.filter((post) => post.author !== null);
+    // ❗ Remove posts whose authors are inactive
+    const filteredPosts = posts.filter(
+      (post) => post.author !== null
+    );
 
     res.json(filteredPosts);
   } catch (error) {
@@ -100,7 +101,7 @@ exports.getPostById = async (req, res) => {
       });
     }
 
-    // Increment view count safely
+    // Increment view count
     post.viewCount += 1;
     await post.save();
 
@@ -122,7 +123,9 @@ exports.updatePost = async (req, res) => {
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
 
     // 🔐 Authorization

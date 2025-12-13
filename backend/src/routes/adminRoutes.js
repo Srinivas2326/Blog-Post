@@ -19,11 +19,11 @@ router.use(protect, adminOnly);
 
 /**
  * GET ALL USERS (Admin)
- * ❗ IMPORTANT: Exclude soft-deleted users
+ * 🔹 Only existing users (deleted users are gone forever)
  */
 router.get("/users", async (req, res) => {
   try {
-    const users = await User.find({ isActive: true }).select("-password");
+    const users = await User.find().select("-password");
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch users" });
@@ -31,14 +31,15 @@ router.get("/users", async (req, res) => {
 });
 
 /**
- * SOFT DELETE USER (Deactivate account)
- * Admin cannot deactivate self
+ * 🔥 DELETE USER PERMANENTLY (DATABASE DELETE)
+ * Admin cannot delete self
  */
 router.delete("/users/:id", async (req, res) => {
   try {
+    // ❌ Prevent admin deleting himself
     if (req.user.id === req.params.id) {
       return res.status(400).json({
-        message: "Admin cannot deactivate their own account",
+        message: "Admin cannot delete their own account",
       });
     }
 
@@ -48,47 +49,18 @@ router.delete("/users/:id", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // ✅ SOFT DELETE USER
-    user.isActive = false;
-    await user.save();
+    // 🔥 DELETE ALL POSTS BY USER
+    await Post.deleteMany({ author: user._id });
 
-    // OPTIONAL: hide all posts by this user
-    await Post.updateMany(
-      { author: user._id },
-      { isPublished: false }
-    );
+    // 🔥 DELETE USER FROM DATABASE
+    await User.findByIdAndDelete(req.params.id);
 
     res.json({
-      message: "User account deactivated successfully",
+      message: "User permanently deleted from database",
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to deactivate user" });
-  }
-});
-
-/**
- * REACTIVATE USER (Optional)
- */
-router.put("/users/:id/activate", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.isActive = true;
-    await user.save();
-
-    // OPTIONAL: republish posts
-    await Post.updateMany(
-      { author: user._id },
-      { isPublished: true }
-    );
-
-    res.json({ message: "User account reactivated successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to reactivate user" });
+    console.error("ADMIN DELETE USER ERROR:", error);
+    res.status(500).json({ message: "Failed to delete user" });
   }
 });
 
@@ -98,12 +70,11 @@ router.put("/users/:id/activate", async (req, res) => {
 
 /**
  * GET ALL POSTS (Admin View)
- * Includes posts from inactive users
  */
 router.get("/posts", async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate("author", "_id name email role isActive")
+      .populate("author", "_id name email role")
       .sort({ createdAt: -1 });
 
     res.json(posts);
