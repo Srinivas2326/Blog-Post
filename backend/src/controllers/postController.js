@@ -15,7 +15,7 @@ exports.createPost = async (req, res) => {
       });
     }
 
-    // ❌ Block ONLY inactive authors (NOT admin)
+    // ❌ Block inactive authors (admin allowed)
     if (!req.user.isActive && req.user.role !== "admin") {
       return res.status(403).json({
         message: "Your account is deactivated",
@@ -25,7 +25,7 @@ exports.createPost = async (req, res) => {
     const post = await Post.create({
       title,
       content,
-      author: req.user.id,
+      author: req.user._id,
       isPublished: true,
       viewCount: 0,
     });
@@ -43,12 +43,12 @@ exports.createPost = async (req, res) => {
 };
 
 /* ======================================================
-   GET MY POSTS
+   GET MY POSTS (Dashboard)
 ====================================================== */
 exports.getMyPosts = async (req, res) => {
   try {
     const posts = await Post.find({
-      author: req.user.id,
+      author: req.user._id,
     }).sort({ createdAt: -1 });
 
     return res.json(posts);
@@ -61,11 +61,11 @@ exports.getMyPosts = async (req, res) => {
 
 /* ======================================================
    GET ALL POSTS (Public)
-   ❗ Hide posts of inactive users
+   ❗ Hides posts of inactive users
 ====================================================== */
 exports.getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
+    const posts = await Post.find({ isPublished: true })
       .populate({
         path: "author",
         select: "_id name email role isActive",
@@ -73,9 +73,8 @@ exports.getAllPosts = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    const filteredPosts = posts.filter(
-      (post) => post.author !== null
-    );
+    // ❗ Remove posts whose author is inactive/deleted
+    const filteredPosts = posts.filter(post => post.author);
 
     return res.json(filteredPosts);
   } catch (error) {
@@ -87,6 +86,7 @@ exports.getAllPosts = async (req, res) => {
 
 /* ======================================================
    GET POST BY ID
+   ❗ Blocks inactive author posts
 ====================================================== */
 exports.getPostById = async (req, res) => {
   try {
@@ -101,6 +101,7 @@ exports.getPostById = async (req, res) => {
       });
     }
 
+    // Increment view count safely
     post.viewCount += 1;
     await post.save();
 
@@ -114,7 +115,7 @@ exports.getPostById = async (req, res) => {
 
 /* ======================================================
    UPDATE POST
-   Author → Own post (active only)
+   Author → Own post (active)
    Admin  → Any post
 ====================================================== */
 exports.updatePost = async (req, res) => {
@@ -127,6 +128,7 @@ exports.updatePost = async (req, res) => {
       });
     }
 
+    // 🔐 Authorization
     if (
       post.author.toString() !== req.user.id &&
       req.user.role !== "admin"
@@ -168,6 +170,7 @@ exports.deletePost = async (req, res) => {
       });
     }
 
+    // 🔐 Authorization
     if (
       post.author.toString() !== req.user.id &&
       req.user.role !== "admin"

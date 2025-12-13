@@ -5,16 +5,17 @@ const User = require("../models/User");
    AUTH MIDDLEWARE
    - Verifies access token
    - Always fetches fresh user from DB
-   - Blocks inactive users (except admin)
+   - Blocks inactive users (admins allowed)
+   - Attaches full user info for authorization
 ====================================================== */
 const protect = async (req, res, next) => {
   try {
     let token;
 
-    // 1️⃣ Get token from Authorization header
+    // 1️⃣ Extract token
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
+      req.headers.authorization.startsWith("Bearer ")
     ) {
       token = req.headers.authorization.split(" ")[1];
     }
@@ -28,8 +29,8 @@ const protect = async (req, res, next) => {
     // 2️⃣ Verify JWT
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    // 3️⃣ Always fetch latest user from DB
-    const user = await User.findById(decoded.id).select("-password");
+    // 3️⃣ Fetch fresh user from DB
+    const user = await User.findById(decoded.id);
 
     if (!user) {
       return res.status(401).json({
@@ -37,17 +38,17 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // 4️⃣ Block inactive users (admins excluded if needed)
+    // 4️⃣ Block inactive users (admin allowed)
     if (!user.isActive && user.role !== "admin") {
       return res.status(403).json({
         message: "Your account has been deactivated by admin",
       });
     }
 
-    // 5️⃣ Attach FULL user object to req
+    // 5️⃣ Attach FULL user object
     req.user = {
-      _id: user._id,
-      id: user._id,
+      _id: user._id,                 // ✅ ObjectId
+      id: user._id.toString(),       // ✅ string (safe compare)
       name: user.name,
       email: user.email,
       role: user.role,
