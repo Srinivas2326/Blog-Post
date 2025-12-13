@@ -1,18 +1,12 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-/* ======================================================
-   AUTH MIDDLEWARE
-   - Verifies access token
-   - Always fetches fresh user from DB
-   - Blocks inactive users (admins allowed)
-   - Attaches full user info for authorization
-====================================================== */
+
 const protect = async (req, res, next) => {
   try {
     let token;
 
-    // 1️⃣ Extract token
+    // 1️ Extract token
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer ")
@@ -26,10 +20,10 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // 2️⃣ Verify JWT
+    // 2️ Verify JWT
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    // 3️⃣ Fetch fresh user from DB
+    // 3️ Fetch fresh user from DB
     const user = await User.findById(decoded.id);
 
     if (!user) {
@@ -38,17 +32,17 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // 4️⃣ Block inactive users (admin allowed)
+    // 4️ Block inactive users (admin allowed)
     if (!user.isActive && user.role !== "admin") {
       return res.status(403).json({
         message: "Your account has been deactivated by admin",
       });
     }
 
-    // 5️⃣ Attach FULL user object
+    // 5️ Attach FULL user object
     req.user = {
-      _id: user._id,                 // ✅ ObjectId
-      id: user._id.toString(),       // ✅ string (safe compare)
+      _id: user._id,                
+      id: user._id.toString(),      
       name: user.name,
       email: user.email,
       role: user.role,

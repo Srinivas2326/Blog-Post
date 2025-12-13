@@ -13,20 +13,14 @@ const {
 
 const router = express.Router();
 
-/* ======================================================
-   PUBLIC ROUTES
-====================================================== */
+  //  PUBLIC ROUTES
 router.get("/", getAllPosts);
 router.get("/:id", getPostById);
 
-/* ======================================================
-   AUTHENTICATED USER ROUTES
-====================================================== */
+  //  AUTHENTICATED USER ROUTES
 router.get("/mine", protect, getMyPosts);
 
-/* ======================================================
-   AUTHOR / ADMIN ROUTES
-====================================================== */
+  //  AUTHOR / ADMIN ROUTES
 
 // Create post → author & admin
 router.post(

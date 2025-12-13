@@ -4,9 +4,7 @@ import { API } from "../utils/api";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  /* ======================================================
-     USER + TOKEN INITIAL STATE
-  ====================================================== */
+    //  USER + TOKEN INITIAL STATE
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("blog_user");
@@ -22,9 +20,7 @@ export const AuthProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(false);
 
-  /* ======================================================
-     RESTORE SESSION ON REFRESH
-  ====================================================== */
+    //  RESTORE SESSION ON REFRESH
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("blog_user");
@@ -37,11 +33,9 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  /* ======================================================
-     LOGIN (DUAL MODE)
-     MODE 1 → email + password
-     MODE 2 → Google OAuth
-  ====================================================== */
+    //  LOGIN (DUAL MODE)
+    //  MODE 1 → email + password
+    //  MODE 2 → Google OAuth
   const login = async (emailOrUserObject, passwordOrToken) => {
     setLoading(true);
 
@@ -93,9 +87,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /* ======================================================
-     REGISTER
-  ====================================================== */
+    //  REGISTER
   const register = async (name, email, password) => {
     setLoading(true);
 
@@ -121,9 +113,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /* ======================================================
-     LOGOUT
-  ====================================================== */
+    //  LOGOUT
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -135,9 +125,7 @@ export const AuthProvider = ({ children }) => {
     API.post("/auth/logout").catch(() => {});
   };
 
-  /* ======================================================
-     ROLE HELPERS
-  ====================================================== */
+    //  ROLE HELPERS
   const isAuthenticated = !!token;
   const isAdmin = user?.role === "admin";
 
@@ -152,7 +140,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         setUser,
         isAuthenticated,
-        isAdmin, // ✅ ADMIN FLAG
+        isAdmin, 
       }}
     >
       {children}

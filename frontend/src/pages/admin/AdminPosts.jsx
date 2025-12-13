@@ -11,9 +11,7 @@ export default function AdminPosts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* ======================================================
-     FETCH ALL POSTS (ADMIN)
-  ====================================================== */
+    //  FETCH ALL POSTS (ADMIN)
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -34,9 +32,7 @@ export default function AdminPosts() {
     fetchPosts();
   }, [token]);
 
-  /* ======================================================
-     DELETE POST
-  ====================================================== */
+    //  DELETE POST
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
 
@@ -53,9 +49,7 @@ export default function AdminPosts() {
     }
   };
 
-  /* ======================================================
-     UI STATES
-  ====================================================== */
+    //  UI STATES
   if (loading) {
     return (
       <div className="page-container">

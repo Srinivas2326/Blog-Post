@@ -9,7 +9,7 @@ export default function CreatePost() {
   const navigate = useNavigate();
   const { token, user } = useAuth();
 
-  // 🔒 BLOCK DEACTIVATED USERS AT UI LEVEL
+  //  BLOCK DEACTIVATED USERS AT UI LEVEL
   if (user && user.isActive === false) {
     return (
       <div className="page-container">

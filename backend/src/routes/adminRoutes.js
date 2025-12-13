@@ -7,19 +7,13 @@ const Post = require("../models/Post");
 
 const router = express.Router();
 
-/* ======================================================
-   ALL ADMIN ROUTES
-   protect → adminOnly
-====================================================== */
+
 router.use(protect, adminOnly);
 
-/* ======================================================
-   USERS MANAGEMENT
-====================================================== */
-
+  //  USERS MANAGEMENT
 /**
  * GET ALL USERS (Admin)
- * 🔹 Returns only users that exist in DB
+ *  Returns only users that exist in DB
  */
 router.get("/users", async (req, res) => {
   try {
@@ -32,7 +26,7 @@ router.get("/users", async (req, res) => {
 });
 
 /**
- * 🔥 DELETE USER PERMANENTLY
+ * - DELETE USER PERMANENTLY
  * - Admin cannot delete self
  * - Deletes user posts
  * - Deletes user from DB
@@ -71,9 +65,7 @@ router.delete("/users/:id", async (req, res) => {
   }
 });
 
-/* ======================================================
-   POSTS MANAGEMENT
-====================================================== */
+  //  POSTS MANAGEMENT
 
 /**
  * GET ALL POSTS (Admin View)

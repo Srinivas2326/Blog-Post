@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 
-/* ======================================================
-   POST SCHEMA
-====================================================== */
+
 const postSchema = new mongoose.Schema(
   {
     title: {
@@ -22,7 +20,7 @@ const postSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true, // faster admin queries
+      index: true, 
     },
 
     isPublished: {
@@ -40,9 +38,7 @@ const postSchema = new mongoose.Schema(
   }
 );
 
-/* ======================================================
-   INDEXES (performance for admin panel)
-====================================================== */
+  //  INDEXES (performance for admin panel)
 postSchema.index({ createdAt: -1 });
 postSchema.index({ author: 1 });
 

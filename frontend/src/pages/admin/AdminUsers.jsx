@@ -8,9 +8,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* ======================================================
-     FETCH ALL USERS
-  ====================================================== */
+    //  FETCH ALL USERS
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -31,9 +29,7 @@ export default function AdminUsers() {
     fetchUsers();
   }, [token]);
 
-  /* ======================================================
-     DELETE USER
-  ====================================================== */
+    //  DELETE USER
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
@@ -51,9 +47,7 @@ export default function AdminUsers() {
     }
   };
 
-  /* ======================================================
-     UI STATES
-  ====================================================== */
+    //  UI STATES
   if (loading) {
     return (
       <div className="page-container">

@@ -60,9 +60,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/* =====================================
-   HASH PASSWORD BEFORE SAVE
-===================================== */
+  //  HASH PASSWORD BEFORE SAVE
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
 
@@ -70,17 +68,13 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-/* =====================================
-   PASSWORD MATCH
-===================================== */
+  //  PASSWORD MATCH
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-/* =====================================
-   PASSWORD RESET TOKEN
-===================================== */
+  //  PASSWORD RESET TOKEN
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
 

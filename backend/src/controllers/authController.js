@@ -4,9 +4,7 @@ const {
   generateRefreshToken,
 } = require("../utils/generateToken");
 
-/* ======================================================
-   REGISTER (EMAIL + PASSWORD)
-====================================================== */
+  //  REGISTER (EMAIL + PASSWORD)
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -20,7 +18,7 @@ exports.registerUser = async (req, res) => {
       name,
       email,
       password,
-      role: "author", // ❗ NEVER allow role from request body
+      role: "author", 
     });
 
     res.status(201).json({
@@ -40,9 +38,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-/* ======================================================
-   LOGIN (EMAIL + PASSWORD)
-====================================================== */
+  //  LOGIN (EMAIL + PASSWORD)
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -53,14 +49,14 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // ❌ BLOCK DEACTIVATED USERS
+    //  BLOCK DEACTIVATED USERS
     if (!user.isActive) {
       return res.status(403).json({
         message: "Your account has been deactivated by admin",
       });
     }
 
-    // ❌ Google-only account
+    //  Google-only account
     if (!user.password) {
       return res.status(400).json({
         message:
@@ -102,9 +98,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-/* ======================================================
-   GOOGLE AUTH LOGIN
-====================================================== */
+  //  GOOGLE AUTH LOGIN
 exports.googleAuthUser = async (req, res) => {
   try {
     const { email, name, googleId } = req.body;

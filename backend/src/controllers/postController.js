@@ -1,10 +1,8 @@
 const Post = require("../models/Post");
 
-/* ======================================================
-   CREATE POST
-   Author → Active only
-   Admin  → Always allowed
-====================================================== */
+  //  CREATE POST
+  //  Author → Active only
+  //  Admin  → Always allowed
 exports.createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -15,7 +13,7 @@ exports.createPost = async (req, res) => {
       });
     }
 
-    // ❌ Block inactive authors (admin allowed)
+    //  Block inactive authors (admin allowed)
     if (!req.user.isActive && req.user.role !== "admin") {
       return res.status(403).json({
         message: "Your account is deactivated",
@@ -42,9 +40,7 @@ exports.createPost = async (req, res) => {
   }
 };
 
-/* ======================================================
-   GET MY POSTS (Dashboard)
-====================================================== */
+  //  GET MY POSTS (Dashboard)
 exports.getMyPosts = async (req, res) => {
   try {
     const posts = await Post.find({
@@ -59,10 +55,8 @@ exports.getMyPosts = async (req, res) => {
   }
 };
 
-/* ======================================================
-   GET ALL POSTS (Public)
-   ❗ Hides posts of inactive users
-====================================================== */
+  //  GET ALL POSTS (Public)
+  //   Hides posts of inactive users
 exports.getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find({ isPublished: true })
@@ -73,7 +67,7 @@ exports.getAllPosts = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    // ❗ Remove posts whose author is inactive/deleted
+    //  Remove posts whose author is inactive/deleted
     const filteredPosts = posts.filter(post => post.author);
 
     return res.json(filteredPosts);
@@ -84,10 +78,8 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
-/* ======================================================
-   GET POST BY ID
-   ❗ Blocks inactive author posts
-====================================================== */
+  //  GET POST BY ID
+  //   Blocks inactive author posts
 exports.getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).populate(
@@ -113,11 +105,9 @@ exports.getPostById = async (req, res) => {
   }
 };
 
-/* ======================================================
-   UPDATE POST
-   Author → Own post (active)
-   Admin  → Any post
-====================================================== */
+  //  UPDATE POST
+  //  Author → Own post (active)
+  //  Admin  → Any post
 exports.updatePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -128,7 +118,7 @@ exports.updatePost = async (req, res) => {
       });
     }
 
-    // 🔐 Authorization
+    //  Authorization
     if (
       post.author.toString() !== req.user.id &&
       req.user.role !== "admin"
