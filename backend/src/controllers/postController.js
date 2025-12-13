@@ -1,4 +1,5 @@
 const Post = require("../models/Post");
+const User = require("../models/User");
 
 /* ======================================================
    CREATE POST (Author / Admin)
@@ -8,7 +9,16 @@ exports.createPost = async (req, res) => {
     const { title, content } = req.body;
 
     if (!title || !content) {
-      return res.status(400).json({ message: "Title and content are required" });
+      return res.status(400).json({
+        message: "Title and content are required",
+      });
+    }
+
+    // ❌ Block inactive users
+    if (!req.user.isActive) {
+      return res.status(403).json({
+        message: "Your account is deactivated",
+      });
     }
 
     const post = await Post.create({
@@ -19,12 +29,12 @@ exports.createPost = async (req, res) => {
       viewCount: 0,
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "Post created successfully",
       post,
     });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Server error",
       error: error.message,
     });
@@ -32,64 +42,80 @@ exports.createPost = async (req, res) => {
 };
 
 /* ======================================================
-   GET MY POSTS (Author dashboard)
+   GET MY POSTS (Author Dashboard)
 ====================================================== */
 exports.getMyPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ author: req.user.id })
-      .sort({ createdAt: -1 });
+    const posts = await Post.find({
+      author: req.user.id,
+    }).sort({ createdAt: -1 });
 
-    return res.json(posts);
+    res.json(posts);
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Failed to load posts",
     });
   }
 };
 
 /* ======================================================
-   GET ALL POSTS (Public + Admin View)
+   GET ALL POSTS (Public View)
+   ❗ Excludes posts from inactive users
 ====================================================== */
 exports.getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
-      .sort({ createdAt: -1 })
-      .populate("author", "_id name email role");
+      .populate({
+        path: "author",
+        select: "_id name email role isActive",
+        match: { isActive: true }, // 🔥 hide inactive users
+      })
+      .sort({ createdAt: -1 });
 
-    return res.json(posts);
+    // Remove posts whose authors are inactive
+    const filteredPosts = posts.filter((post) => post.author !== null);
+
+    res.json(filteredPosts);
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Could not fetch posts",
     });
   }
 };
 
 /* ======================================================
-   GET POST BY ID (View Count Increment)
+   GET POST BY ID
+   ❗ Blocks inactive author posts
 ====================================================== */
 exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id)
-      .populate("author", "_id name email role");
+    const post = await Post.findById(req.params.id).populate(
+      "author",
+      "_id name email role isActive"
+    );
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+    if (!post || !post.author || !post.author.isActive) {
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
 
-    // Increment view count
+    // Increment view count safely
     post.viewCount += 1;
     await post.save();
 
-    return res.json(post);
+    res.json(post);
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Error fetching post",
     });
   }
 };
 
 /* ======================================================
-   UPDATE POST (Author own post OR Admin any post)
+   UPDATE POST
+   Author → Own post
+   Admin → Any post
 ====================================================== */
 exports.updatePost = async (req, res) => {
   try {
@@ -99,12 +125,14 @@ exports.updatePost = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // 🔐 Authorization check
+    // 🔐 Authorization
     if (
       post.author.toString() !== req.user.id &&
       req.user.role !== "admin"
     ) {
-      return res.status(403).json({ message: "Not authorized to update this post" });
+      return res.status(403).json({
+        message: "Not authorized to update this post",
+      });
     }
 
     post.title = req.body.title ?? post.title;
@@ -112,12 +140,12 @@ exports.updatePost = async (req, res) => {
 
     const updatedPost = await post.save();
 
-    return res.json({
+    res.json({
       message: "Post updated successfully",
       post: updatedPost,
     });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Server error",
       error: error.message,
     });
@@ -125,29 +153,37 @@ exports.updatePost = async (req, res) => {
 };
 
 /* ======================================================
-   DELETE POST (Author own post OR Admin any post)
+   DELETE POST
+   Author → Own post
+   Admin → Any post
 ====================================================== */
 exports.deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
 
-    // 🔐 Authorization check
+    // 🔐 Authorization
     if (
       post.author.toString() !== req.user.id &&
       req.user.role !== "admin"
     ) {
-      return res.status(403).json({ message: "Not authorized to delete this post" });
+      return res.status(403).json({
+        message: "Not authorized to delete this post",
+      });
     }
 
     await post.deleteOne();
 
-    return res.json({ message: "Post deleted successfully" });
+    res.json({
+      message: "Post deleted successfully",
+    });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Server error",
       error: error.message,
     });

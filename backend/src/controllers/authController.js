@@ -4,23 +4,26 @@ const {
   generateRefreshToken,
 } = require("../utils/generateToken");
 
-                      // REGISTER (EMAIL + PASSWORD)
+/* ======================================================
+   REGISTER (EMAIL + PASSWORD)
+====================================================== */
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
+    }
 
     const user = await User.create({
       name,
       email,
       password,
-      role: role || "author",
+      role: "author", // ❗ NEVER allow role from request body
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "User registered successfully",
       user: {
         _id: user._id,
@@ -30,31 +33,45 @@ exports.registerUser = async (req, res) => {
       },
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
-                //  LOGIN (EMAIL + PASSWORD)
+/* ======================================================
+   LOGIN (EMAIL + PASSWORD)
+====================================================== */
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    let user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password");
 
-    if (!user)
+    if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
+    }
 
+    // ❌ BLOCK DEACTIVATED USERS
+    if (!user.isActive) {
+      return res.status(403).json({
+        message: "Your account has been deactivated by admin",
+      });
+    }
+
+    // ❌ Google-only account
     if (!user.password) {
       return res.status(400).json({
-        message: "This account uses Google login only. Please continue with Google.",
+        message:
+          "This account uses Google login only. Please continue with Google.",
       });
     }
 
     const isMatch = await user.matchPassword(password);
-    if (!isMatch)
+    if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
+    }
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
@@ -67,7 +84,7 @@ exports.loginUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Login successful",
       accessToken,
       user: {
@@ -78,18 +95,19 @@ exports.loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
-                        // GOOGLE AUTH LOGIN
+/* ======================================================
+   GOOGLE AUTH LOGIN
+====================================================== */
 exports.googleAuthUser = async (req, res) => {
   try {
     const { email, name, googleId } = req.body;
-
-    console.log("📥 Google Login Payload:", req.body);
 
     if (!email || !googleId) {
       return res.status(400).json({ message: "Invalid Google auth data" });
@@ -98,27 +116,29 @@ exports.googleAuthUser = async (req, res) => {
     let user = await User.findOne({ email }).select("+password");
 
     if (user) {
-      // Convert existing email/password → Google account
-      if (!user.googleId) {
-        console.log("🔄 Converting Password user → Google login");
+      // ❌ BLOCK DEACTIVATED USERS
+      if (!user.isActive) {
+        return res.status(403).json({
+          message: "Your account has been deactivated by admin",
+        });
+      }
 
+      // Convert password user → Google user
+      if (!user.googleId) {
         user.googleId = googleId;
-        user.password = null; 
+        user.password = null;
         await user.save({ validateBeforeSave: false });
       }
     } else {
-      console.log("🆕 Creating NEW Google user");
-
       user = await User.create({
         name,
         email,
         googleId,
-        password: null, 
+        password: null,
         role: "author",
       });
     }
 
-    // Generate Tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
     const isProd = process.env.NODE_ENV === "production";
@@ -130,8 +150,7 @@ exports.googleAuthUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    console.log("✅ Google Login Success");
-    return res.status(200).json({
+    res.status(200).json({
       message: "Google login successful",
       accessToken,
       user: {
@@ -141,10 +160,9 @@ exports.googleAuthUser = async (req, res) => {
         email: user.email,
       },
     });
-
   } catch (error) {
     console.error("🔥 GOOGLE LOGIN ERROR:", error);
-    return res.status(500).json({
+    res.status(500).json({
       message: "Google login failed",
       error: error.message,
     });

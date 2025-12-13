@@ -19,11 +19,11 @@ router.use(protect, adminOnly);
 
 /**
  * GET ALL USERS (Admin)
- * Includes active & inactive users
+ * ❗ IMPORTANT: Exclude soft-deleted users
  */
 router.get("/users", async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find({ isActive: true }).select("-password");
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch users" });
@@ -48,9 +48,15 @@ router.delete("/users/:id", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 🔹 SOFT DELETE
+    // ✅ SOFT DELETE USER
     user.isActive = false;
     await user.save();
+
+    // OPTIONAL: hide all posts by this user
+    await Post.updateMany(
+      { author: user._id },
+      { isPublished: false }
+    );
 
     res.json({
       message: "User account deactivated successfully",
@@ -61,7 +67,7 @@ router.delete("/users/:id", async (req, res) => {
 });
 
 /**
- * REACTIVATE USER (Optional but recommended)
+ * REACTIVATE USER (Optional)
  */
 router.put("/users/:id/activate", async (req, res) => {
   try {
@@ -73,6 +79,12 @@ router.put("/users/:id/activate", async (req, res) => {
 
     user.isActive = true;
     await user.save();
+
+    // OPTIONAL: republish posts
+    await Post.updateMany(
+      { author: user._id },
+      { isPublished: true }
+    );
 
     res.json({ message: "User account reactivated successfully" });
   } catch (error) {
