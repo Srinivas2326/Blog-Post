@@ -4,7 +4,9 @@ import { API } from "../utils/api";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-        // USER + TOKEN INITIAL STATE
+  /* ======================================================
+     USER + TOKEN INITIAL STATE
+  ====================================================== */
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("blog_user");
@@ -20,7 +22,9 @@ export const AuthProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(false);
 
-        // RESTORE SESSION ON REFRESH
+  /* ======================================================
+     RESTORE SESSION ON REFRESH
+  ====================================================== */
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("blog_user");
@@ -33,14 +37,16 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-      //  MAIN LOGIN FUNCTION (DUAL MODE)
-      //  MODE 1 → login(email, password)
-      //  MODE 2 → login(userObject, token)  ← For Google OAuth
+  /* ======================================================
+     LOGIN (DUAL MODE)
+     MODE 1 → email + password
+     MODE 2 → Google OAuth
+  ====================================================== */
   const login = async (emailOrUserObject, passwordOrToken) => {
     setLoading(true);
 
     try {
-      // 🔹 MODE 2: Google login (direct entry)
+      // 🔹 MODE 2: Google login
       if (typeof emailOrUserObject === "object" && passwordOrToken) {
         const userData = emailOrUserObject;
         const accessToken = passwordOrToken;
@@ -63,7 +69,10 @@ export const AuthProvider = ({ children }) => {
 
       const { accessToken, user: userData } = res.data;
 
-      const fixedUser = { ...userData, _id: userData._id || userData.id };
+      const fixedUser = {
+        ...userData,
+        _id: userData._id || userData.id,
+      };
 
       setUser(fixedUser);
       setToken(accessToken);
@@ -75,7 +84,6 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (err) {
       console.error("LOGIN ERROR:", err);
-
       return {
         success: false,
         message: err.response?.data?.message || "Login failed",
@@ -85,7 +93,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-                // REGISTER
+  /* ======================================================
+     REGISTER
+  ====================================================== */
   const register = async (name, email, password) => {
     setLoading(true);
 
@@ -111,7 +121,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-                // LOGOUT
+  /* ======================================================
+     LOGOUT
+  ====================================================== */
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -123,6 +135,12 @@ export const AuthProvider = ({ children }) => {
     API.post("/auth/logout").catch(() => {});
   };
 
+  /* ======================================================
+     ROLE HELPERS
+  ====================================================== */
+  const isAuthenticated = !!token;
+  const isAdmin = user?.role === "admin";
+
   return (
     <AuthContext.Provider
       value={{
@@ -133,7 +151,8 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         setUser,
-        isAuthenticated: !!token,
+        isAuthenticated,
+        isAdmin, // ✅ ADMIN FLAG
       }}
     >
       {children}

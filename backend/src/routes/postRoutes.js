@@ -13,15 +13,43 @@ const {
 
 const router = express.Router();
 
-// PUBLIC ROUTES
+/* ======================================================
+   PUBLIC ROUTES
+====================================================== */
 router.get("/", getAllPosts);
 router.get("/:id", getPostById);
 
-// PROTECTED ROUTES
-router.get("/mine", protect, getMyPosts); // <-- IMPORTANT
+/* ======================================================
+   AUTHENTICATED USER ROUTES
+====================================================== */
+router.get("/mine", protect, getMyPosts);
 
-router.post("/", protect, authorizeRoles("author", "admin"), createPost);
-router.put("/:id", protect, updatePost);
-router.delete("/:id", protect, deletePost);
+/* ======================================================
+   AUTHOR / ADMIN ROUTES
+====================================================== */
+
+// Create post → author & admin
+router.post(
+  "/",
+  protect,
+  authorizeRoles("author", "admin"),
+  createPost
+);
+
+// Update post → author (own post) OR admin (any post)
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("author", "admin"),
+  updatePost
+);
+
+// Delete post → author (own post) OR admin (any post)
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("author", "admin"),
+  deletePost
+);
 
 module.exports = router;

@@ -18,63 +18,69 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    //  GOOGLE USERS WILL HAVE THIS
+    // Google OAuth users
     googleId: {
       type: String,
       default: null,
     },
 
-    //  PASSWORD ONLY REQUIRED FOR NON-GOOGLE USERS
+    // Password only for non-Google users
     password: {
       type: String,
       minlength: 6,
       required: function () {
-        return !this.googleId; // Google users don't need password
+        return !this.googleId;
       },
-      select: false, 
+      select: false,
     },
 
+    // 🔑 USER ROLE
     role: {
       type: String,
       enum: ["admin", "author"],
       default: "author",
     },
 
+    // 🔒 SOFT DELETE SUPPORT
     isActive: {
       type: Boolean,
       default: true,
     },
 
+    // Optional future permissions
     permissions: {
       type: [String],
       default: [],
     },
 
-    //  PASSWORD RESET SUPPORT
+    // PASSWORD RESET
     resetPasswordToken: String,
     resetPasswordExpires: Date,
   },
   { timestamps: true }
 );
 
-  //  HASH PASSWORD 
+/* =====================================
+   HASH PASSWORD BEFORE SAVE
+===================================== */
 userSchema.pre("save", async function () {
-
-  if (!this.isModified("password") || !this.password) {
-    return;
-  }
+  if (!this.isModified("password") || !this.password) return;
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-  //  PASSWORD MATCH CHECK
+/* =====================================
+   PASSWORD MATCH
+===================================== */
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  if (!this.password) return false; // Google users have no password
-  return await bcrypt.compare(enteredPassword, this.password);
+  if (!this.password) return false;
+  return bcrypt.compare(enteredPassword, this.password);
 };
 
-  //  GENERATE PASSWORD RESET TOKEN
+/* =====================================
+   PASSWORD RESET TOKEN
+===================================== */
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
 
@@ -83,7 +89,6 @@ userSchema.methods.getResetPasswordToken = function () {
     .update(resetToken)
     .digest("hex");
 
-  // Valid for 10 minutes
   this.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
 
   return resetToken;
