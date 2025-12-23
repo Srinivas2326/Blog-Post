@@ -4,9 +4,7 @@ import API from "../utils/api";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // ===============================
-  // STATE
-  // ===============================
+
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("user");
