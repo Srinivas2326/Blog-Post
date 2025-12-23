@@ -3,7 +3,9 @@ const Post = require("../models/Post");
 const bcrypt = require("bcryptjs");
 
 
-
+// ======================================
+// GET PUBLIC USER PROFILE
+// ======================================
 exports.getUserPublicProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
@@ -22,7 +24,9 @@ exports.getUserPublicProfile = async (req, res) => {
 };
 
 
-
+// ======================================
+// UPDATE OWN PROFILE
+// ======================================
 exports.updateMyProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -58,12 +62,13 @@ exports.updateMyProfile = async (req, res) => {
 };
 
 
-
+// ======================================
+// CHANGE PASSWORD  ✅ FIXED
+// ======================================
 exports.changePassword = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 🔴 Accept both names to avoid frontend mismatch
     const { currentPassword, oldPassword, newPassword } = req.body;
     const passwordToCheck = currentPassword || oldPassword;
 
@@ -77,12 +82,12 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
+    // 🔴 THIS LINE IS THE KEY FIX
+    const user = await User.findById(userId).select("+password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Compare old password
     const isMatch = await bcrypt.compare(passwordToCheck, user.password);
     if (!isMatch) {
       return res.status(400).json({
@@ -90,8 +95,7 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    // Set new password (bcrypt runs in pre-save hook)
-    user.password = newPassword;
+    user.password = newPassword; // bcrypt runs in pre-save hook
     await user.save();
 
     res.json({ message: "Password changed successfully" });
@@ -103,7 +107,9 @@ exports.changePassword = async (req, res) => {
 };
 
 
-
+// ======================================
+// ADMIN CONTROLLERS
+// ======================================
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
