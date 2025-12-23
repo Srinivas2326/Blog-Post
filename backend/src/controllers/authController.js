@@ -1,13 +1,16 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 
-
 // ======================================
 // REGISTER (EMAIL + PASSWORD)
 // ======================================
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -19,6 +22,7 @@ exports.registerUser = async (req, res) => {
       email,
       password,
       role: "author",
+      isActive: true,
     });
 
     res.status(201).json({
@@ -30,14 +34,11 @@ exports.registerUser = async (req, res) => {
         email: user.email,
       },
     });
-
   } catch (error) {
-    res.status(500).json({
-      message: "Server error",
-    });
+    console.error("REGISTER ERROR:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // ======================================
 // LOGIN (EMAIL + PASSWORD)
@@ -46,6 +47,11 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    // MUST select password
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
@@ -85,14 +91,11 @@ exports.loginUser = async (req, res) => {
         email: user.email,
       },
     });
-
   } catch (error) {
-    res.status(500).json({
-      message: "Server error",
-    });
+    console.error("LOGIN ERROR:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // ======================================
 // GOOGLE AUTH LOGIN
@@ -108,14 +111,13 @@ exports.googleAuthUser = async (req, res) => {
     let user = await User.findOne({ email }).select("+password");
 
     if (user) {
-      // Block deactivated users
       if (!user.isActive) {
         return res.status(403).json({
           message: "Your account has been deactivated by admin",
         });
       }
 
-      // Convert password user → Google user
+      // Convert email user → Google user
       if (!user.googleId) {
         user.googleId = googleId;
         user.password = null;
@@ -128,10 +130,10 @@ exports.googleAuthUser = async (req, res) => {
         googleId,
         password: null,
         role: "author",
+        isActive: true,
       });
     }
 
-    // ✅ SINGLE JWT TOKEN
     const token = generateToken(user);
 
     res.status(200).json({
@@ -144,11 +146,8 @@ exports.googleAuthUser = async (req, res) => {
         email: user.email,
       },
     });
-
   } catch (error) {
     console.error("GOOGLE LOGIN ERROR:", error);
-    res.status(500).json({
-      message: "Google login failed",
-    });
+    res.status(500).json({ message: "Google login failed" });
   }
 };
