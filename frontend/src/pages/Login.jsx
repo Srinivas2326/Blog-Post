@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { API } from "../utils/api";
+import  API  from "../utils/api";
 
 // Firebase imports
 import { signInWithPopup } from "firebase/auth";

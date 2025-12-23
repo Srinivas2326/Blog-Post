@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { API } from "../utils/api";
+import API  from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import PostCard from "../components/PostCard";
