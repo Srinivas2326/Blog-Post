@@ -17,9 +17,9 @@ exports.getUserPublicProfile = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json({ user, posts });
-
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("GET PUBLIC PROFILE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -29,14 +29,21 @@ exports.getUserPublicProfile = async (req, res) => {
 // ======================================
 exports.updateMyProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({ message: "Request body is empty" });
+    }
+
     const { name, email } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ message: "Name and email are required" });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -52,22 +59,31 @@ exports.updateMyProfile = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
-
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("UPDATE PROFILE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 
 // ======================================
-// CHANGE PASSWORD  ✅ FIXED
+// CHANGE PASSWORD (🔥 FINAL SAFE VERSION)
 // ======================================
 exports.changePassword = async (req, res) => {
   try {
-    const userId = req.user.id;
+    // 🔐 Auth check
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    // 📦 Body check
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({ message: "Request body is empty" });
+    }
+
     const { currentPassword, oldPassword, newPassword } = req.body;
     const passwordToCheck = currentPassword || oldPassword;
 
@@ -75,44 +91,47 @@ exports.changePassword = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    if (newPassword.length < 6) {
+    if (typeof newPassword !== "string" || newPassword.length < 6) {
       return res.status(400).json({
-        message: "New password must be at least 6 characters"
+        message: "New password must be at least 6 characters",
       });
     }
 
-    // ✅ MUST SELECT PASSWORD
-    const user = await User.findById(userId).select("+password");
+    // 🔑 Fetch user WITH password
+    const user = await User.findById(req.user.id).select("+password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 🔴 CRITICAL FIX: handle Google-only users
+    // 🚫 Google users
     if (!user.password) {
       return res.status(400).json({
-        message: "Password change not allowed for Google login accounts"
+        message: "Password change not allowed for Google login accounts",
       });
     }
 
+    // 🔍 Compare passwords
     const isMatch = await bcrypt.compare(passwordToCheck, user.password);
     if (!isMatch) {
       return res.status(400).json({
-        message: "Current password is incorrect"
+        message: "Current password is incorrect",
       });
     }
 
+    // 🔄 Update password
     user.password = newPassword;
     await user.save();
 
     res.json({ message: "Password changed successfully" });
-
   } catch (err) {
     console.error("CHANGE PASSWORD ERROR:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error",
+      error: err.message, // keep for Render logs
+    });
   }
 };
-
 
 
 // ======================================
@@ -123,7 +142,8 @@ exports.getAllUsers = async (req, res) => {
     const users = await User.find().select("-password");
     res.json(users);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("GET ALL USERS ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -135,35 +155,32 @@ exports.getUserById = async (req, res) => {
     }
 
     res.json(user);
-
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("GET USER BY ID ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 exports.updateUser = async (req, res) => {
   try {
-    const { name, email, role, isActive } = req.body;
     const user = await User.findById(req.params.id);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.name = name || user.name;
-    user.email = email || user.email;
-    user.role = role || user.role;
+    const { name, email, role, isActive } = req.body;
 
-    if (typeof isActive === "boolean") {
-      user.isActive = isActive;
-    }
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (role) user.role = role;
+    if (typeof isActive === "boolean") user.isActive = isActive;
 
     await user.save();
 
     res.json({ message: "User updated successfully", user });
-
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("UPDATE USER ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -176,13 +193,13 @@ exports.updatePermissions = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.permissions = permissions;
+    user.permissions = Array.isArray(permissions) ? permissions : [];
     await user.save();
 
     res.json({ message: "Permissions updated successfully", user });
-
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("UPDATE PERMISSIONS ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -195,8 +212,8 @@ exports.deleteUser = async (req, res) => {
 
     await user.deleteOne();
     res.json({ message: "User deleted successfully" });
-
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("DELETE USER ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

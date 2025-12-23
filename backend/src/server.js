@@ -10,17 +10,29 @@ const protectedRoutes = require("./routes/protectedRoutes");
 const postRoutes = require("./routes/postRoutes");
 const userRoutes = require("./routes/userRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
-
-//  ADMIN ROUTES
 const adminRoutes = require("./routes/adminRoutes");
 
 dotenv.config();
 const app = express();
 
-  //  TRUST PROXY (important for cookies behind proxies)
+
+// ======================================
+// TRUST PROXY (for Render / cookies)
+// ======================================
 app.set("trust proxy", 1);
 
-  //  CORS CONFIGURATION
+
+// ======================================
+// BODY PARSERS (🔥 MUST BE FIRST)
+// ======================================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+
+// ======================================
+// CORS CONFIGURATION
+// ======================================
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
   .split(",")
   .map((o) => o.trim());
@@ -51,26 +63,40 @@ app.use((req, res, next) => {
   return res.status(403).json({ message: "CORS blocked: " + origin });
 });
 
-  //  MIDDLEWARE
-app.use(express.json());
-app.use(cookieParser());
 
-  //  API ROUTES
+// ======================================
+// API ROUTES
+// ======================================
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 app.use("/api/protected", protectedRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
-
-//  ADMIN API
 app.use("/api/admin", adminRoutes);
 
-  //  HEALTH CHECK
+
+// ======================================
+// HEALTH CHECK
+// ======================================
 app.get("/api/health", (req, res) =>
   res.json({ status: "ok", message: "Backend is live 🚀" })
 );
 
-  //  DATABASE + SERVER START
+
+// ======================================
+// GLOBAL ERROR HANDLER (🔥 IMPORTANT)
+// ======================================
+app.use((err, req, res, next) => {
+  console.error("🔥 GLOBAL ERROR:", err);
+  res.status(500).json({
+    message: "Internal Server Error",
+  });
+});
+
+
+// ======================================
+// DATABASE + SERVER START
+// ======================================
 connectDB()
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
