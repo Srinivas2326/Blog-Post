@@ -1,32 +1,16 @@
 const jwt = require("jsonwebtoken");
-const generateAccessToken = (user) => {
+
+const generateToken = (user) => {
   return jwt.sign(
     {
       id: user._id,
-      role: user.role, //  REQUIRED for admin access
+      role: user.role, // used for admin authorization
     },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: "15m",
-    }
-  );
-};
-
-
-const generateRefreshToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      role: user.role, 
-    },
-    process.env.REFRESH_TOKEN_SECRET,
+    process.env.JWT_SECRET,   
     {
       expiresIn: "7d",
     }
   );
 };
 
-module.exports = {
-  generateAccessToken,
-  generateRefreshToken,
-};
+module.exports = generateToken;

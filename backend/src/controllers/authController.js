@@ -1,10 +1,10 @@
 const User = require("../models/User");
-const {
-  generateAccessToken,
-  generateRefreshToken,
-} = require("../utils/generateToken");
+const generateToken = require("../utils/generateToken");
 
-  //  REGISTER (EMAIL + PASSWORD)
+
+// ======================================
+// REGISTER (EMAIL + PASSWORD)
+// ======================================
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -18,7 +18,7 @@ exports.registerUser = async (req, res) => {
       name,
       email,
       password,
-      role: "author", 
+      role: "author",
     });
 
     res.status(201).json({
@@ -30,15 +30,18 @@ exports.registerUser = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
 
-  //  LOGIN (EMAIL + PASSWORD)
+
+// ======================================
+// LOGIN (EMAIL + PASSWORD)
+// ======================================
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -49,14 +52,14 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    //  BLOCK DEACTIVATED USERS
+    // Block deactivated users
     if (!user.isActive) {
       return res.status(403).json({
         message: "Your account has been deactivated by admin",
       });
     }
 
-    //  Google-only account
+    // Google-only account
     if (!user.password) {
       return res.status(400).json({
         message:
@@ -69,20 +72,12 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-    const isProd = process.env.NODE_ENV === "production";
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    // ✅ SINGLE JWT TOKEN
+    const token = generateToken(user);
 
     res.status(200).json({
       message: "Login successful",
-      accessToken,
+      token,
       user: {
         _id: user._id,
         name: user.name,
@@ -90,15 +85,18 @@ exports.loginUser = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
 
-  //  GOOGLE AUTH LOGIN
+
+// ======================================
+// GOOGLE AUTH LOGIN
+// ======================================
 exports.googleAuthUser = async (req, res) => {
   try {
     const { email, name, googleId } = req.body;
@@ -110,7 +108,7 @@ exports.googleAuthUser = async (req, res) => {
     let user = await User.findOne({ email }).select("+password");
 
     if (user) {
-      // ❌ BLOCK DEACTIVATED USERS
+      // Block deactivated users
       if (!user.isActive) {
         return res.status(403).json({
           message: "Your account has been deactivated by admin",
@@ -133,20 +131,12 @@ exports.googleAuthUser = async (req, res) => {
       });
     }
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-    const isProd = process.env.NODE_ENV === "production";
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    // ✅ SINGLE JWT TOKEN
+    const token = generateToken(user);
 
     res.status(200).json({
       message: "Google login successful",
-      accessToken,
+      token,
       user: {
         _id: user._id,
         name: user.name,
@@ -154,11 +144,11 @@ exports.googleAuthUser = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
-    console.error("🔥 GOOGLE LOGIN ERROR:", error);
+    console.error("GOOGLE LOGIN ERROR:", error);
     res.status(500).json({
       message: "Google login failed",
-      error: error.message,
     });
   }
 };
