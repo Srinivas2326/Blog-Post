@@ -1,13 +1,15 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { API } from "../utils/api";
+import API from "../utils/api";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    //  USER + TOKEN INITIAL STATE
+  // ===============================
+  // STATE
+  // ===============================
   const [user, setUser] = useState(() => {
     try {
-      const stored = localStorage.getItem("blog_user");
+      const stored = localStorage.getItem("user");
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
@@ -15,16 +17,18 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [token, setToken] = useState(() => {
-    return localStorage.getItem("blog_token") || null;
+    return localStorage.getItem("token") || null;
   });
 
   const [loading, setLoading] = useState(false);
 
-    //  RESTORE SESSION ON REFRESH
+  // ===============================
+  // RESTORE SESSION
+  // ===============================
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("blog_user");
-      const storedToken = localStorage.getItem("blog_token");
+      const storedUser = localStorage.getItem("user");
+      const storedToken = localStorage.getItem("token");
 
       if (storedUser) setUser(JSON.parse(storedUser));
       if (storedToken) setToken(storedToken);
@@ -33,47 +37,26 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-    //  LOGIN (DUAL MODE)
-    //  MODE 1 → email + password
-    //  MODE 2 → Google OAuth
-  const login = async (emailOrUserObject, passwordOrToken) => {
+  // ===============================
+  // LOGIN (EMAIL + PASSWORD)
+  // ===============================
+  const login = async (email, password) => {
     setLoading(true);
 
     try {
-      // 🔹 MODE 2: Google login
-      if (typeof emailOrUserObject === "object" && passwordOrToken) {
-        const userData = emailOrUserObject;
-        const accessToken = passwordOrToken;
-
-        setUser(userData);
-        setToken(accessToken);
-
-        localStorage.setItem("blog_user", JSON.stringify(userData));
-        localStorage.setItem("blog_token", accessToken);
-        localStorage.setItem("blog_userId", userData._id);
-
-        return { success: true };
-      }
-
-      // 🔹 MODE 1: Email/password login
-      const email = emailOrUserObject;
-      const password = passwordOrToken;
-
       const res = await API.post("/auth/login", { email, password });
 
-      const { accessToken, user: userData } = res.data;
+      const { token, user: userData } = res.data;
 
-      const fixedUser = {
-        ...userData,
-        _id: userData._id || userData.id,
-      };
+      if (!token || !userData) {
+        throw new Error("Invalid login response");
+      }
 
-      setUser(fixedUser);
-      setToken(accessToken);
+      setUser(userData);
+      setToken(token);
 
-      localStorage.setItem("blog_user", JSON.stringify(fixedUser));
-      localStorage.setItem("blog_token", accessToken);
-      localStorage.setItem("blog_userId", fixedUser._id);
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", token);
 
       return { success: true };
     } catch (err) {
@@ -87,21 +70,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-    //  REGISTER
+  // ===============================
+  // REGISTER
+  // ===============================
   const register = async (name, email, password) => {
     setLoading(true);
 
     try {
-      const res = await API.post("/auth/register", { name, email, password });
-
-      if (res.data?.message) {
-        return { success: true };
-      }
-
-      return {
-        success: false,
-        message: "Unexpected response from server",
-      };
+      await API.post("/auth/register", { name, email, password });
+      return { success: true };
     } catch (err) {
       console.error("REGISTER ERROR:", err);
       return {
@@ -113,20 +90,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-    //  LOGOUT
+  // ===============================
+  // LOGOUT
+  // ===============================
   const logout = () => {
     setUser(null);
     setToken(null);
 
-    localStorage.removeItem("blog_user");
-    localStorage.removeItem("blog_token");
-    localStorage.removeItem("blog_userId");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
 
     API.post("/auth/logout").catch(() => {});
   };
 
-    //  ROLE HELPERS
-  const isAuthenticated = !!token;
+  // ===============================
+  // HELPERS
+  // ===============================
+  const isAuthenticated = Boolean(token);
   const isAdmin = user?.role === "admin";
 
   return (
@@ -140,7 +120,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         setUser,
         isAuthenticated,
-        isAdmin, 
+        isAdmin,
       }}
     >
       {children}
