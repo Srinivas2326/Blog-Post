@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import  API  from "../utils/api";
+import API from "../utils/api";
 
-// Firebase imports
+// Firebase
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../firebase";
 
@@ -15,11 +15,16 @@ export default function Login() {
   const [error, setError] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // ===============================
+  // HANDLE INPUT CHANGE
+  // ===============================
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-      // NORMAL LOGIN (EMAIL + PASSWORD)
+  // ===============================
+  // EMAIL + PASSWORD LOGIN
+  // ===============================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -33,59 +38,58 @@ export default function Login() {
     }
   };
 
-                      // GOOGLE LOGIN
+  // ===============================
+  // GOOGLE LOGIN
+  // ===============================
   const handleGoogleLogin = async () => {
     setError("");
     setGoogleLoading(true);
 
     try {
-      // Firebase popup login
+      // Firebase popup
       const result = await signInWithPopup(auth, googleProvider);
       const googleUser = result.user;
 
-      // Send data to backend
+      // Send Google data to backend
       const res = await API.post("/auth/google", {
         name: googleUser.displayName,
         email: googleUser.email,
         googleId: googleUser.uid,
       });
 
-      const { accessToken, user } = res.data;
+      // ✅ BACKEND RETURNS { token, user }
+      const { token, user } = res.data;
 
-      // Store in localStorage
-      localStorage.setItem("blog_user", JSON.stringify(user));
-      localStorage.setItem("blog_token", accessToken);
-      localStorage.setItem("blog_userId", user._id);
-
-      //  Update AuthContext immediately
-      login(user, accessToken);
+      // ✅ Store EXACT keys used by AuthContext
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", token);
 
       // Redirect
       navigate("/dashboard");
-
     } catch (err) {
       console.error("GOOGLE LOGIN ERROR:", err);
 
-      const message =
+      setError(
         err.response?.data?.message ||
-        err.message ||
-        "Google login failed";
-
-      setError(message);
+          err.message ||
+          "Google login failed"
+      );
+    } finally {
+      setGoogleLoading(false);
     }
-
-    setGoogleLoading(false);
   };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
         <h2>Welcome back 👋</h2>
-        <p className="auth-subtitle">Login to continue to your dashboard.</p>
+        <p className="auth-subtitle">
+          Login to continue to your dashboard.
+        </p>
 
         {error && <div className="auth-error">{error}</div>}
 
-        {/* EMAIL LOGIN FORM */}
+        {/* EMAIL LOGIN */}
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="field">
             <label>Email</label>
@@ -111,16 +115,25 @@ export default function Login() {
             />
           </div>
 
-          <button className="btn btn-primary full-width" disabled={loading}>
+          <button
+            className="btn btn-primary full-width"
+            disabled={loading}
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        <div style={{ textAlign: "center", margin: "15px 0", color: "#888" }}>
+        <div
+          style={{
+            textAlign: "center",
+            margin: "15px 0",
+            color: "#888",
+          }}
+        >
           — or —
         </div>
 
-        {/* GOOGLE LOGIN BUTTON */}
+        {/* GOOGLE LOGIN */}
         <button
           type="button"
           className="btn btn-outline full-width"
@@ -141,11 +154,11 @@ export default function Login() {
           {googleLoading ? "Connecting..." : "Continue with Google"}
         </button>
 
-        {/* Links */}
         <div className="auth-links">
           <Link to="/forgot-password">Forgot password?</Link>
           <span>
-            Don’t have an account? <Link to="/register">Register</Link>
+            Don’t have an account?{" "}
+            <Link to="/register">Register</Link>
           </span>
         </div>
       </div>
