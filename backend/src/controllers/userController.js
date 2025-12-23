@@ -68,7 +68,6 @@ exports.updateMyProfile = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const userId = req.user.id;
-
     const { currentPassword, oldPassword, newPassword } = req.body;
     const passwordToCheck = currentPassword || oldPassword;
 
@@ -82,10 +81,18 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    // 🔴 THIS LINE IS THE KEY FIX
+    // ✅ MUST SELECT PASSWORD
     const user = await User.findById(userId).select("+password");
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔴 CRITICAL FIX: handle Google-only users
+    if (!user.password) {
+      return res.status(400).json({
+        message: "Password change not allowed for Google login accounts"
+      });
     }
 
     const isMatch = await bcrypt.compare(passwordToCheck, user.password);
@@ -95,16 +102,17 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    user.password = newPassword; // bcrypt runs in pre-save hook
+    user.password = newPassword;
     await user.save();
 
     res.json({ message: "Password changed successfully" });
 
   } catch (err) {
-    console.error("Change password error:", err);
+    console.error("CHANGE PASSWORD ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 // ======================================
