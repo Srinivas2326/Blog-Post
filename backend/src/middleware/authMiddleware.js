@@ -1,12 +1,11 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-
 const protect = async (req, res, next) => {
   try {
     let token;
 
-    // 1️ Extract token
+    // 1️ Extract token from Authorization header
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer ")
@@ -20,10 +19,13 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // 2️ Verify JWT
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    // 2️ Verify JWT token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET
+    );
 
-    // 3️ Fetch fresh user from DB
+    // 3️ Fetch fresh user from database
     const user = await User.findById(decoded.id);
 
     if (!user) {
@@ -32,17 +34,17 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // 4️ Block inactive users (admin allowed)
+    // 4️ Block inactive users (except admin)
     if (!user.isActive && user.role !== "admin") {
       return res.status(403).json({
         message: "Your account has been deactivated by admin",
       });
     }
 
-    // 5️ Attach FULL user object
+    // 5️ Attach user info to request
     req.user = {
-      _id: user._id,                
-      id: user._id.toString(),      
+      _id: user._id,
+      id: user._id.toString(),
       name: user.name,
       email: user.email,
       role: user.role,
@@ -52,8 +54,7 @@ const protect = async (req, res, next) => {
     next();
   } catch (error) {
     return res.status(401).json({
-      message: "Not authorized",
-      error: error.message,
+      message: "Not authorized, token invalid or expired",
     });
   }
 };

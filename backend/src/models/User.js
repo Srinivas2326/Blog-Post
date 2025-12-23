@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
     },
 
     // Google OAuth users
@@ -31,17 +32,17 @@ const userSchema = new mongoose.Schema(
       required: function () {
         return !this.googleId;
       },
-      select: false,
+      select: false, // 🔐 Never return password by default
     },
 
-    // 🔑 USER ROLE
+    // USER ROLE
     role: {
       type: String,
       enum: ["admin", "author"],
       default: "author",
     },
 
-    // 🔒 SOFT DELETE SUPPORT
+    // SOFT DELETE SUPPORT
     isActive: {
       type: Boolean,
       default: true,
@@ -57,24 +58,40 @@ const userSchema = new mongoose.Schema(
     resetPasswordToken: String,
     resetPasswordExpires: Date,
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-  //  HASH PASSWORD BEFORE SAVE
-userSchema.pre("save", async function () {
-  if (!this.isModified("password") || !this.password) return;
 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+
+// HASH PASSWORD BEFORE SAVE
+userSchema.pre("save", async function (next) {
+  // If password not modified or not present, skip hashing
+  if (!this.isModified("password") || !this.password) {
+    return next();
+  }
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
-  //  PASSWORD MATCH
+
+
+// MATCH PASSWORD
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-  //  PASSWORD RESET TOKEN
+
+
+// GENERATE PASSWORD RESET TOKEN
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
 
@@ -83,9 +100,11 @@ userSchema.methods.getResetPasswordToken = function () {
     .update(resetToken)
     .digest("hex");
 
-  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
   return resetToken;
 };
+
+
 
 module.exports = mongoose.model("User", userSchema);

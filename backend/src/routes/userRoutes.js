@@ -16,20 +16,26 @@ const protect = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
 
 
-// PUBLIC PROFILE
+
+
+// Public user profile
 router.get("/profile/:id", getUserPublicProfile);
 
-// UPDATE OWN PROFILE
+
+// Update own profile
 router.put("/me", protect, updateMyProfile);
 
-// CHANGE PASSWORD
+// Change password
 router.put("/change-password", protect, changePassword);
 
+
 // ADMIN ROUTES
+
 router.get("/", protect, authorizeRoles("admin"), getAllUsers);
 router.get("/:id", protect, authorizeRoles("admin"), getUserById);
 router.put("/:id", protect, authorizeRoles("admin"), updateUser);
-router.put("/permissions/:id", protect, authorizeRoles("admin"), updatePermissions);
+router.put("/:id/permissions", protect, authorizeRoles("admin"), updatePermissions);
 router.delete("/:id", protect, authorizeRoles("admin"), deleteUser);
+
 
 module.exports = router;
