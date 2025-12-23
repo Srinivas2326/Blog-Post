@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import  API  from "../utils/api";
+import API from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function EditProfile() {
   const { user, setUser } = useAuth();
 
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -14,15 +14,19 @@ export default function EditProfile() {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Sync form values when user context updates
+  // ===============================
+  // SYNC USER DATA
+  // ===============================
   useEffect(() => {
     if (user) {
-      setName(user.name);
-      setEmail(user.email);
+      setName(user.name || "");
+      setEmail(user.email || "");
     }
   }, [user]);
 
-        // UPDATE PROFILE  (PUT /users/me)
+  // ===============================
+  // UPDATE PROFILE
+  // ===============================
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -31,16 +35,19 @@ export default function EditProfile() {
     try {
       const res = await API.put("/users/me", { name, email });
 
-      // Validate response
-      if (!res.data || !res.data.user) {
+      if (!res.data?.user) {
         throw new Error("Invalid server response");
       }
 
-      const updatedUser = res.data.user;
+      // ✅ Normalize updated user
+      const updatedUser = {
+        ...res.data.user,
+        _id: res.data.user._id || res.data.user.id,
+      };
 
-      // Update context + localStorage
+      // Update context + localStorage (SINGLE SOURCE)
       setUser(updatedUser);
-      localStorage.setItem("blog_user", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
       setMessage({
         type: "success",
@@ -49,14 +56,18 @@ export default function EditProfile() {
     } catch (err) {
       setMessage({
         type: "error",
-        text: err.response?.data?.message || "Update failed. Please try again.",
+        text:
+          err.response?.data?.message ||
+          "Update failed. Please try again.",
       });
     } finally {
       setLoading(false);
     }
   };
 
-        // CHANGE PASSWORD  (PUT /users/change-password)
+  // ===============================
+  // CHANGE PASSWORD
+  // ===============================
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setMessage(null);
@@ -64,19 +75,19 @@ export default function EditProfile() {
     if (!oldPassword || !newPassword) {
       return setMessage({
         type: "error",
-        text: "Both fields are required.",
+        text: "Both old and new passwords are required.",
       });
     }
 
     try {
       const res = await API.put("/users/change-password", {
         currentPassword: oldPassword,
-        newPassword: newPassword,
+        newPassword,
       });
 
       setMessage({
         type: "success",
-        text: res.data.message || "Password changed successfully.",
+        text: res.data?.message || "Password changed successfully.",
       });
 
       setOldPassword("");
@@ -84,7 +95,9 @@ export default function EditProfile() {
     } catch (err) {
       setMessage({
         type: "error",
-        text: err.response?.data?.message || "Password change failed.",
+        text:
+          err.response?.data?.message ||
+          "Password change failed.",
       });
     }
   };
@@ -98,8 +111,11 @@ export default function EditProfile() {
         {message && (
           <p
             style={{
-              color: message.type === "success" ? "var(--success)" : "var(--danger)",
-              marginBottom: "10px",
+              color:
+                message.type === "success"
+                  ? "var(--success)"
+                  : "var(--danger)",
+              marginBottom: "12px",
               fontWeight: 500,
             }}
           >
@@ -108,22 +124,29 @@ export default function EditProfile() {
         )}
 
         {/* UPDATE PROFILE FORM */}
-        <form onSubmit={handleUpdateProfile} style={{ marginBottom: "20px" }}>
-          <label style={{ display: "block", marginBottom: "6px" }}>Name</label>
+        <form onSubmit={handleUpdateProfile} style={{ marginBottom: "24px" }}>
+          <label>Name</label>
           <input
             className="input"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
           />
 
-          <label style={{ display: "block", margin: "12px 0 6px" }}>Email</label>
+          <label style={{ marginTop: "12px" }}>Email</label>
           <input
+            type="email"
             className="input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
-          <button className="btn btn-primary" type="submit" disabled={loading}>
+          <button
+            className="btn btn-primary"
+            type="submit"
+            disabled={loading}
+          >
             {loading ? "Saving…" : "Save Changes"}
           </button>
         </form>
@@ -134,9 +157,7 @@ export default function EditProfile() {
         <h3 style={{ marginTop: "20px" }}>Change Password</h3>
 
         <form onSubmit={handleChangePassword}>
-          <label style={{ display: "block", marginBottom: "6px" }}>
-            Old Password
-          </label>
+          <label>Old Password</label>
           <input
             type="password"
             className="input"
@@ -144,9 +165,7 @@ export default function EditProfile() {
             onChange={(e) => setOldPassword(e.target.value)}
           />
 
-          <label style={{ display: "block", margin: "12px 0 6px" }}>
-            New Password
-          </label>
+          <label style={{ marginTop: "12px" }}>New Password</label>
           <input
             type="password"
             className="input"
@@ -154,8 +173,8 @@ export default function EditProfile() {
             onChange={(e) => setNewPassword(e.target.value)}
           />
 
-          <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? "Updating…" : "Update Password"}
+          <button className="btn btn-primary" type="submit">
+            Update Password
           </button>
         </form>
       </div>

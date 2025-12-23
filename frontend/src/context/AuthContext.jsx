@@ -1,36 +1,38 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import API from "../utils/api"
+import API from "../utils/api";
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const [token, setToken] = useState(() => {
-    return localStorage.getItem("token") || null;
-  });
-
+  // ===============================
+  // STATE
+  // ===============================
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // ===============================
-  // RESTORE SESSION
+  // RESTORE SESSION ON PAGE REFRESH
   // ===============================
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("user");
       const storedToken = localStorage.getItem("token");
 
-      if (storedUser) setUser(JSON.parse(storedUser));
-      if (storedToken) setToken(storedToken);
+      if (storedUser && storedToken) {
+        const parsedUser = JSON.parse(storedUser);
+
+        // ✅ Normalize _id (VERY IMPORTANT)
+        setUser({
+          ...parsedUser,
+          _id: parsedUser._id || parsedUser.id,
+        });
+
+        setToken(storedToken);
+      }
     } catch (err) {
-      console.error("Error restoring auth state:", err);
+      console.error("Auth restore failed:", err);
+      localStorage.clear();
     }
   }, []);
 
@@ -43,16 +45,22 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await API.post("/auth/login", { email, password });
 
-      const { token, user: userData } = res.data;
+      const { token, user } = res.data;
 
-      if (!token || !userData) {
+      if (!token || !user) {
         throw new Error("Invalid login response");
       }
 
-      setUser(userData);
+      // ✅ Normalize user id
+      const normalizedUser = {
+        ...user,
+        _id: user._id || user.id,
+      };
+
+      setUser(normalizedUser);
       setToken(token);
 
-      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("user", JSON.stringify(normalizedUser));
       localStorage.setItem("token", token);
 
       return { success: true };
@@ -60,7 +68,9 @@ export const AuthProvider = ({ children }) => {
       console.error("LOGIN ERROR:", err);
       return {
         success: false,
-        message: err.response?.data?.message || "Login failed",
+        message:
+          err.response?.data?.message ||
+          "Unable to login. Please try again.",
       };
     } finally {
       setLoading(false);
@@ -80,7 +90,9 @@ export const AuthProvider = ({ children }) => {
       console.error("REGISTER ERROR:", err);
       return {
         success: false,
-        message: err.response?.data?.message || "Registration failed",
+        message:
+          err.response?.data?.message ||
+          "Registration failed. Try again.",
       };
     } finally {
       setLoading(false);
@@ -96,8 +108,6 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-
-    API.post("/auth/logout").catch(() => {});
   };
 
   // ===============================
