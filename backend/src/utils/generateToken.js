@@ -1,10 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-/**
- * Generate JWT access token
- * @param {Object} user - MongoDB user document
- * @returns {string} JWT token
- */
+
 const generateToken = (user) => {
   if (!user || !user._id) {
     throw new Error("User data is required to generate token");
@@ -12,10 +8,10 @@ const generateToken = (user) => {
 
   return jwt.sign(
     {
-      id: user._id.toString(), // ensure string
-      role: user.role,         // used for role-based access
+      id: user._id.toString(), 
+      role: user.role,         
     },
-    process.env.JWT_SECRET,    // MUST exist in Render env
+    process.env.JWT_SECRET,   
     {
       expiresIn: "7d",
     }

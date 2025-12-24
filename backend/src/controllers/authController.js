@@ -1,9 +1,7 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 
-// ======================================
 // REGISTER (EMAIL + PASSWORD)
-// ======================================
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -40,9 +38,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// ======================================
 // LOGIN (EMAIL + PASSWORD)
-// ======================================
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -78,7 +74,7 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // ✅ SINGLE JWT TOKEN
+    //  SINGLE JWT TOKEN
     const token = generateToken(user);
 
     res.status(200).json({
@@ -97,9 +93,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// ======================================
 // GOOGLE AUTH LOGIN
-// ======================================
 exports.googleAuthUser = async (req, res) => {
   try {
     const { email, name, googleId } = req.body;

@@ -4,16 +4,12 @@ import API from "../utils/api";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // ===============================
   // STATE
-  // ===============================
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ===============================
   // RESTORE SESSION ON PAGE REFRESH
-  // ===============================
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("user");
@@ -36,9 +32,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ===============================
   // LOGIN (EMAIL + PASSWORD)
-  // ===============================
   const login = async (email, password) => {
     setLoading(true);
 
@@ -77,9 +71,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ===============================
   // REGISTER
-  // ===============================
   const register = async (name, email, password) => {
     setLoading(true);
 
@@ -99,9 +91,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ===============================
   // LOGOUT
-  // ===============================
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -110,9 +100,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
   };
 
-  // ===============================
   // HELPERS
-  // ===============================
   const isAuthenticated = Boolean(token);
   const isAdmin = user?.role === "admin";
 

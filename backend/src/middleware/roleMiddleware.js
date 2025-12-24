@@ -1,5 +1,4 @@
 
-
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     // User must be authenticated first

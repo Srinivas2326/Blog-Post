@@ -14,9 +14,7 @@ export default function EditProfile() {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ===============================
   // SYNC USER DATA
-  // ===============================
   useEffect(() => {
     if (user) {
       setName(user.name || "");
@@ -24,9 +22,7 @@ export default function EditProfile() {
     }
   }, [user]);
 
-  // ===============================
   // UPDATE PROFILE
-  // ===============================
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -39,7 +35,7 @@ export default function EditProfile() {
         throw new Error("Invalid server response");
       }
 
-      // ✅ Normalize updated user
+      //  Normalize updated user
       const updatedUser = {
         ...res.data.user,
         _id: res.data.user._id || res.data.user.id,
@@ -65,9 +61,7 @@ export default function EditProfile() {
     }
   };
 
-  // ===============================
   // CHANGE PASSWORD
-  // ===============================
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setMessage(null);

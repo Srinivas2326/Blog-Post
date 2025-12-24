@@ -58,9 +58,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/* ===========================
-   HASH PASSWORD (FIXED)
-=========================== */
+  //  HASH PASSWORD 
 userSchema.pre("save", async function () {
   // Skip if password not modified OR Google user
   if (!this.isModified("password") || !this.password) return;
@@ -69,17 +67,13 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-/* ===========================
-   MATCH PASSWORD
-=========================== */
+  //  MATCH PASSWORD
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-/* ===========================
-   RESET PASSWORD TOKEN
-=========================== */
+  //  RESET PASSWORD TOKEN
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
 

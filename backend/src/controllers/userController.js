@@ -3,9 +3,7 @@ const Post = require("../models/Post");
 const bcrypt = require("bcryptjs");
 
 
-// ======================================
 // GET PUBLIC USER PROFILE
-// ======================================
 exports.getUserPublicProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
@@ -24,9 +22,7 @@ exports.getUserPublicProfile = async (req, res) => {
 };
 
 
-// ======================================
 // UPDATE OWN PROFILE
-// ======================================
 exports.updateMyProfile = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
@@ -69,9 +65,7 @@ exports.updateMyProfile = async (req, res) => {
 };
 
 
-// ======================================
-// CHANGE PASSWORD (🔥 FINAL SAFE VERSION)
-// ======================================
+// CHANGE PASSWORD 
 exports.changePassword = async (req, res) => {
   try {
     // 🔐 Auth check
@@ -97,21 +91,21 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    // 🔑 Fetch user WITH password
+    //  Fetch user WITH password
     const user = await User.findById(req.user.id).select("+password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 🚫 Google users
+    //  Google users
     if (!user.password) {
       return res.status(400).json({
         message: "Password change not allowed for Google login accounts",
       });
     }
 
-    // 🔍 Compare passwords
+    //  Compare passwords
     const isMatch = await bcrypt.compare(passwordToCheck, user.password);
     if (!isMatch) {
       return res.status(400).json({
@@ -119,7 +113,7 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    // 🔄 Update password
+    //  Update password
     user.password = newPassword;
     await user.save();
 
@@ -128,15 +122,13 @@ exports.changePassword = async (req, res) => {
     console.error("CHANGE PASSWORD ERROR:", err);
     res.status(500).json({
       message: "Server error",
-      error: err.message, // keep for Render logs
+      error: err.message, 
     });
   }
 };
 
 
-// ======================================
 // ADMIN CONTROLLERS
-// ======================================
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");

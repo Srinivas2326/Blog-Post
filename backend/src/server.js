@@ -16,23 +16,17 @@ dotenv.config();
 const app = express();
 
 
-// ======================================
 // TRUST PROXY (for Render / cookies)
-// ======================================
 app.set("trust proxy", 1);
 
 
-// ======================================
-// BODY PARSERS (🔥 MUST BE FIRST)
-// ======================================
+// BODY PARSERS 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 
-// ======================================
 // CORS CONFIGURATION
-// ======================================
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
   .split(",")
   .map((o) => o.trim());
@@ -64,9 +58,7 @@ app.use((req, res, next) => {
 });
 
 
-// ======================================
 // API ROUTES
-// ======================================
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 app.use("/api/protected", protectedRoutes);
@@ -75,17 +67,13 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 
 
-// ======================================
 // HEALTH CHECK
-// ======================================
 app.get("/api/health", (req, res) =>
   res.json({ status: "ok", message: "Backend is live 🚀" })
 );
 
 
-// ======================================
-// GLOBAL ERROR HANDLER (🔥 IMPORTANT)
-// ======================================
+// GLOBAL ERROR HANDLER 
 app.use((err, req, res, next) => {
   console.error("🔥 GLOBAL ERROR:", err);
   res.status(500).json({
@@ -94,9 +82,7 @@ app.use((err, req, res, next) => {
 });
 
 
-// ======================================
 // DATABASE + SERVER START
-// ======================================
 connectDB()
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {

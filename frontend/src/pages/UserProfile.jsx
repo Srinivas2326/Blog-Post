@@ -32,7 +32,6 @@ export default function UserProfile() {
 
   const { user, posts } = data;
 
-  // ✅ THIS IS THE FIX
   const isOwnProfile =
     loggedInUser && loggedInUser._id === user._id;
 
@@ -48,7 +47,6 @@ export default function UserProfile() {
         >
           <h1>{user.name}</h1>
 
-          {/* ✅ EDIT PROFILE WILL NOW SHOW */}
           {isOwnProfile && (
             <Link to="/edit-profile" className="btn btn-primary">
               Edit Profile

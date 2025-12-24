@@ -15,16 +15,12 @@ export default function Login() {
   const [error, setError] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // ===============================
   // HANDLE INPUT CHANGE
-  // ===============================
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // ===============================
   // EMAIL + PASSWORD LOGIN
-  // ===============================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -38,9 +34,7 @@ export default function Login() {
     }
   };
 
-  // ===============================
   // GOOGLE LOGIN
-  // ===============================
   const handleGoogleLogin = async () => {
     setError("");
     setGoogleLoading(true);
@@ -57,10 +51,10 @@ export default function Login() {
         googleId: googleUser.uid,
       });
 
-      // ✅ BACKEND RETURNS { token, user }
+      //  BACKEND RETURNS { token, user }
       const { token, user } = res.data;
 
-      // ✅ Store EXACT keys used by AuthContext
+      //  Store EXACT keys used by AuthContext
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
 
