@@ -68,12 +68,12 @@ exports.updateMyProfile = async (req, res) => {
 // CHANGE PASSWORD 
 exports.changePassword = async (req, res) => {
   try {
-    // 🔐 Auth check
+    //  Auth check
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: "Not authorized" });
     }
 
-    // 📦 Body check
+    // Body check
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({ message: "Request body is empty" });
     }

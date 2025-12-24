@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       if (storedUser && storedToken) {
         const parsedUser = JSON.parse(storedUser);
 
-        // ✅ Normalize _id (VERY IMPORTANT)
+        //  Normalize _id (VERY IMPORTANT)
         setUser({
           ...parsedUser,
           _id: parsedUser._id || parsedUser.id,
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Invalid login response");
       }
 
-      // ✅ Normalize user id
+      //  Normalize user id
       const normalizedUser = {
         ...user,
         _id: user._id || user.id,

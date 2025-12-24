@@ -160,7 +160,7 @@ exports.deletePost = async (req, res) => {
       });
     }
 
-    // 🔐 Authorization
+    //  Authorization
     if (
       post.author.toString() !== req.user.id &&
       req.user.role !== "admin"

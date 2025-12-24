@@ -33,7 +33,7 @@ router.get("/users", async (req, res) => {
  */
 router.delete("/users/:id", async (req, res) => {
   try {
-    // ❌ Prevent admin deleting self
+    //  Prevent admin deleting self
     if (req.user.id === req.params.id) {
       return res.status(400).json({
         message: "Admin cannot delete their own account",
@@ -48,10 +48,10 @@ router.delete("/users/:id", async (req, res) => {
       });
     }
 
-    // 🔥 Delete all posts by user
+    //  Delete all posts by user
     await Post.deleteMany({ author: user._id });
 
-    // 🔥 Delete user permanently
+    //  Delete user permanently
     await User.findByIdAndDelete(req.params.id);
 
     return res.json({
